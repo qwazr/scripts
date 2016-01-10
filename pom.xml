@@ -43,6 +43,10 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
+            <artifactId>qwazr-semaphores</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qwazr</groupId>
             <artifactId>qwazr-tools</artifactId>
         </dependency>
         <dependency>

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.connectors.ConnectorManager;
 import com.qwazr.scripts.ScriptRunStatus.ScriptState;
+import com.qwazr.semaphores.SemaphoresManager;
 import com.qwazr.tools.ToolsManager;
 import com.qwazr.utils.IOUtils;
 import org.slf4j.Logger;
@@ -112,7 +113,7 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 			if (fileReader != null)
 				IOUtils.closeQuietly(fileReader);
 			for (String semaphore : semaphores)
-				ScriptManager.INSTANCE.unregisterSemaphore(semaphore, uuid);
+				SemaphoresManager.getInstance().unregister(semaphore, uuid);
 		}
 	}
 
@@ -167,19 +168,19 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 	public class ScriptSemaphore {
 
 		public Set<String> owners(String semaphore_id, Boolean local, Integer timeOut) {
-			return new ScriptServiceImpl().getSemaphoreOwners(semaphore_id, local, timeOut);
+			return SemaphoresManager.getService().getSemaphoreOwners(semaphore_id);
 		}
 
 		public void register(String semaphore_id) {
 			synchronized (semaphores) {
+				SemaphoresManager.getInstance().register(semaphore_id, uuid);
 				semaphores.add(semaphore_id);
-				ScriptManager.INSTANCE.registerSemaphore(semaphore_id, uuid);
 			}
 		}
 
 		public void unregister(String semaphore_id) {
 			synchronized (semaphores) {
-				ScriptManager.INSTANCE.unregisterSemaphore(semaphore_id, uuid);
+				SemaphoresManager.getInstance().unregister(semaphore_id, uuid);
 				semaphores.remove(semaphore_id);
 			}
 		}

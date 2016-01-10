@@ -27,7 +27,6 @@ import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 public class ScriptSingleClient extends JsonClientAbstract implements ScriptServiceInterface {
@@ -35,7 +34,6 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	private final static String SCRIPT_PREFIX = "/scripts/";
 	private final static String SCRIPT_PREFIX_RUN = SCRIPT_PREFIX + "run/";
 	private final static String SCRIPT_PREFIX_STATUS = SCRIPT_PREFIX + "status/";
-	private final static String SCRIPT_PREFIX_SEMAPHORES = SCRIPT_PREFIX + "semaphores/";
 
 	ScriptSingleClient(String url, Integer msTimeOut) throws URISyntaxException {
 		super(url, msTimeOut);
@@ -100,22 +98,5 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 		} catch (IOException e) {
 			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
 		}
-	}
-
-	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
-	};
-
-	@Override
-	public Set<String> getSemaphores(Boolean local, Integer msTimeout) {
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_SEMAPHORES).setParameters(local, msTimeout);
-		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
-	}
-
-	@Override
-	public Set<String> getSemaphoreOwners(String semaphore_id, Boolean local, Integer msTimeout) {
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_SEMAPHORES, semaphore_id).setParameters(local, msTimeout);
-		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, SetStringTypeRef, 200);
 	}
 }

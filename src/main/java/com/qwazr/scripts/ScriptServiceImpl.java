@@ -1,12 +1,12 @@
 /**
  * Copyright 2014-2016 Emmanuel Keller / QWAZR
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,16 +15,13 @@
  **/
 package com.qwazr.scripts;
 
-import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import com.qwazr.utils.server.ServerException;
 
 import javax.ws.rs.core.Response.Status;
-
-import com.qwazr.utils.server.ServerException;
+import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ScriptServiceImpl implements ScriptServiceInterface {
 
@@ -34,8 +31,7 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 	}
 
 	@Override
-	public ScriptRunStatus runScriptVariables(String scriptPath,
-			Map<String, String> variables) {
+	public ScriptRunStatus runScriptVariables(String scriptPath, Map<String, String> variables) {
 		try {
 			return ScriptManager.INSTANCE.runAsync(scriptPath, variables);
 		} catch (Exception e) {
@@ -78,52 +74,17 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 	}
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local,
-			Integer msTimeout) {
+	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, Integer msTimeout) {
 		try {
 			if (local != null && local) {
-				Map<String, ScriptRunStatus> localRunStatusMap = ScriptManager.INSTANCE
-						.getRunsStatus();
+				Map<String, ScriptRunStatus> localRunStatusMap = ScriptManager.INSTANCE.getRunsStatus();
 				if (localRunStatusMap == null)
 					localRunStatusMap = Collections.emptyMap();
 				return localRunStatusMap;
 			}
 			TreeMap<String, ScriptRunStatus> globalRunStatusMap = new TreeMap<String, ScriptRunStatus>();
-			globalRunStatusMap.putAll(ScriptManager.INSTANCE.getNewClient(
-					msTimeout).getRunsStatus(false, msTimeout));
+			globalRunStatusMap.putAll(ScriptManager.INSTANCE.getNewClient(msTimeout).getRunsStatus(false, msTimeout));
 			return globalRunStatusMap;
-		} catch (URISyntaxException e) {
-			throw ServerException.getJsonException(e);
-		}
-	}
-
-	@Override
-	public Set<String> getSemaphores(Boolean local, Integer msTimeout) {
-		try {
-			if (local != null && local) {
-				Set<String> semaphores = new HashSet<String>();
-				ScriptManager.INSTANCE.getSemaphores(semaphores);
-				return semaphores;
-			}
-			return ScriptManager.INSTANCE.getNewClient(msTimeout)
-					.getSemaphores(false, msTimeout);
-		} catch (URISyntaxException e) {
-			throw ServerException.getJsonException(e);
-		}
-
-	}
-
-	@Override
-	public Set<String> getSemaphoreOwners(String semaphore_id, Boolean local,
-			Integer msTimeout) {
-		try {
-			if (local != null && local) {
-				Set<String> owners = new HashSet<String>();
-				ScriptManager.INSTANCE.getSemaphoreOwners(semaphore_id, owners);
-				return owners;
-			}
-			return ScriptManager.INSTANCE.getNewClient(msTimeout)
-					.getSemaphoreOwners(semaphore_id, false, msTimeout);
 		} catch (URISyntaxException e) {
 			throw ServerException.getJsonException(e);
 		}

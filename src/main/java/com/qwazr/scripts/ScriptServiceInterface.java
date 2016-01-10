@@ -19,7 +19,6 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Map;
-import java.util.Set;
 
 @RolesAllowed(ScriptsServer.SERVICE_NAME_SCRIPT)
 @Path("/scripts")
@@ -57,14 +56,4 @@ public interface ScriptServiceInterface {
 	@Produces(MediaType.TEXT_PLAIN)
 	String getRunErr(@PathParam("run_id") String run_id);
 
-	@GET
-	@Path("/semaphores")
-	@Produces(MediaType.APPLICATION_JSON)
-	Set<String> getSemaphores(@QueryParam("local") Boolean local, @QueryParam("timeout") Integer msTimeout);
-
-	@GET
-	@Path("/semaphores/{semaphore_id}")
-	@Produces(MediaType.APPLICATION_JSON)
-	Set<String> getSemaphoreOwners(@PathParam("semaphore_id") String semaphore_id, @QueryParam("local") Boolean local,
-			@QueryParam("timeout") Integer msTimeout);
 }

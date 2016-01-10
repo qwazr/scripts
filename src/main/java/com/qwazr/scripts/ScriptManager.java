@@ -58,9 +58,6 @@ public class ScriptManager {
 	private final ReadWriteLock runsMapLock = new ReadWriteLock();
 	private final HashMap<String, ScriptRunThread> runsMap;
 
-	private final ReadWriteLock semaphoreMapLock = new ReadWriteLock();
-	private final HashMap<String, Set<String>> semaphoreMap;
-
 	private final ExecutorService scriptExecutorService;
 	private final ExecutorService clientExecutorService;
 
@@ -71,7 +68,6 @@ public class ScriptManager {
 		scriptEngine = manager.getEngineByName("nashorn");
 
 		runsMap = new HashMap<String, ScriptRunThread>();
-		semaphoreMap = new HashMap<String, Set<String>>();
 		scriptExecutorService = Executors.newFixedThreadPool(100);
 		clientExecutorService = Executors.newFixedThreadPool(8);
 	}
@@ -184,60 +180,6 @@ public class ScriptManager {
 		return new ScriptMultiClient(clientExecutorService,
 				ClusterManager.INSTANCE.getClusterClient().getActiveNodesByService(ScriptsServer.SERVICE_NAME_SCRIPT),
 				msTimeout);
-	}
-
-	void getSemaphores(Collection<String> semaphores) {
-		semaphoreMapLock.r.lock();
-		try {
-			semaphores.addAll(semaphoreMap.keySet());
-		} finally {
-			semaphoreMapLock.r.unlock();
-		}
-	}
-
-	void getSemaphoreOwners(String semaphore_id, Collection<String> owners) {
-		semaphoreMapLock.r.lock();
-		try {
-			Set<String> ows = semaphoreMap.get(semaphore_id);
-			if (ows == null)
-				return;
-			for (String owner : ows)
-				owners.add(owner);
-		} finally {
-			semaphoreMapLock.r.unlock();
-		}
-	}
-
-	void registerSemaphore(String semaphore_id, String script_id) {
-		semaphoreMapLock.w.lock();
-		try {
-			if (logger.isInfoEnabled())
-				logger.info("Register semaphore: " + semaphore_id + " to scripts: " + script_id);
-			Set<String> owners = semaphoreMap.get(semaphore_id);
-			if (owners == null) {
-				owners = new HashSet<String>();
-				semaphoreMap.put(semaphore_id, owners);
-			}
-			owners.add(script_id);
-		} finally {
-			semaphoreMapLock.w.unlock();
-		}
-	}
-
-	void unregisterSemaphore(String semaphore_id, String script_id) {
-		semaphoreMapLock.w.lock();
-		try {
-			if (logger.isInfoEnabled())
-				logger.info("Unregister semaphore: " + semaphore_id + " to scripts: " + script_id);
-			Set<String> owners = semaphoreMap.get(semaphore_id);
-			if (owners == null)
-				return;
-			owners.remove(script_id);
-			if (owners.isEmpty())
-				semaphoreMap.remove(semaphore_id);
-		} finally {
-			semaphoreMapLock.w.unlock();
-		}
 	}
 
 }
