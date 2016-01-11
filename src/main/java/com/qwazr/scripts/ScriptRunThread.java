@@ -138,7 +138,7 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 	}
 
 	public ScriptRunStatus getStatus() {
-		return new ScriptRunStatus(ClusterManager.INSTANCE.myAddress, scriptFile.getName(), uuid, state, startTime,
+		return new ScriptRunStatus(ClusterManager.getInstance().myAddress, scriptFile.getName(), uuid, state, startTime,
 				endTime, bindings == null ? null : bindings.keySet(), exception);
 	}
 

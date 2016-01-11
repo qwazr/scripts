@@ -35,22 +35,31 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ScriptManager {
 
+	public static final String SERVICE_NAME_SCRIPT = "scripts";
+
 	private static final Logger logger = LoggerFactory.getLogger(ScriptManager.class);
 
-	public static volatile ScriptManager INSTANCE = null;
+	static ScriptManager INSTANCE = null;
 
-	public static void load(File directory) throws IOException {
+	public synchronized static Class<? extends ScriptServiceInterface> load(ExecutorService executorService,
+			File directory) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new ScriptManager(directory);
+			INSTANCE = new ScriptManager(executorService, directory);
+			return ScriptServiceImpl.class;
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
+	}
+
+	public static ScriptManager getInstance() {
+		if (INSTANCE == null)
+			throw new RuntimeException("The scripts service is not enabled");
+		return INSTANCE;
 	}
 
 	private final ScriptEngine scriptEngine;
@@ -58,18 +67,16 @@ public class ScriptManager {
 	private final ReadWriteLock runsMapLock = new ReadWriteLock();
 	private final HashMap<String, ScriptRunThread> runsMap;
 
-	private final ExecutorService scriptExecutorService;
-	private final ExecutorService clientExecutorService;
+	private final ExecutorService executorService;
 
-	private ScriptManager(File rootDirectory) throws IOException, URISyntaxException {
+	private ScriptManager(ExecutorService executorService, File rootDirectory) throws IOException, URISyntaxException {
 
 		// Load Nashorn
 		ScriptEngineManager manager = new ScriptEngineManager();
 		scriptEngine = manager.getEngineByName("nashorn");
 
 		runsMap = new HashMap<String, ScriptRunThread>();
-		scriptExecutorService = Executors.newFixedThreadPool(100);
-		clientExecutorService = Executors.newFixedThreadPool(8);
+		this.executorService = executorService;
 	}
 
 	private File getScriptFile(String scriptPath) throws ServerException {
@@ -120,7 +127,7 @@ public class ScriptManager {
 		if (logger.isInfoEnabled())
 			logger.info("Run async: " + scriptPath);
 		ScriptRunThread scriptRunThread = getNewScriptRunThread(scriptPath, objects);
-		scriptExecutorService.execute(scriptRunThread);
+		executorService.execute(scriptRunThread);
 		expireScriptRunThread();
 		return scriptRunThread.getStatus();
 	}
@@ -175,10 +182,10 @@ public class ScriptManager {
 	}
 
 	public ScriptServiceInterface getNewClient(Integer msTimeout) throws URISyntaxException {
-		if (!ClusterManager.INSTANCE.isCluster())
+		if (!ClusterManager.getInstance().isCluster())
 			return new ScriptServiceImpl();
-		return new ScriptMultiClient(clientExecutorService,
-				ClusterManager.INSTANCE.getClusterClient().getActiveNodesByService(ScriptsServer.SERVICE_NAME_SCRIPT),
+		return new ScriptMultiClient(executorService,
+				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_SCRIPT),
 				msTimeout);
 	}
 

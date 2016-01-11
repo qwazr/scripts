@@ -84,7 +84,7 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSin
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, Integer msTimeout) {
 		if (local != null && local)
-			return getClientByUrl(ClusterManager.INSTANCE.myAddress).getRunsStatus(true, msTimeout);
+			return getClientByUrl(ClusterManager.getInstance().myAddress).getRunsStatus(true, msTimeout);
 		TreeMap<String, ScriptRunStatus> results = new TreeMap<String, ScriptRunStatus>();
 		for (ScriptSingleClient client : this) {
 			try {

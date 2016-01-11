@@ -20,7 +20,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.Map;
 
-@RolesAllowed(ScriptsServer.SERVICE_NAME_SCRIPT)
+@RolesAllowed(ScriptManager.SERVICE_NAME_SCRIPT)
 @Path("/scripts")
 public interface ScriptServiceInterface {
 
