@@ -185,7 +185,7 @@ public class ScriptManager {
 		if (!ClusterManager.getInstance().isCluster())
 			return new ScriptServiceImpl();
 		return new ScriptMultiClient(executorService,
-				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_SCRIPT),
+				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_SCRIPT, null),
 				msTimeout);
 	}
 
