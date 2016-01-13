@@ -18,10 +18,7 @@ package com.qwazr.scripts;
 import com.qwazr.utils.server.ServerException;
 
 import javax.ws.rs.core.Response.Status;
-import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class ScriptServiceImpl implements ScriptServiceInterface {
 
@@ -74,8 +71,9 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 	}
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, Integer msTimeout) {
-		try {
+	public Map<String, ScriptRunStatus> getRunsStatus() {
+		return ScriptManager.INSTANCE.getRunsStatus();
+			/*
 			if (local != null && local) {
 				Map<String, ScriptRunStatus> localRunStatusMap = ScriptManager.INSTANCE.getRunsStatus();
 				if (localRunStatusMap == null)
@@ -83,10 +81,7 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 				return localRunStatusMap;
 			}
 			TreeMap<String, ScriptRunStatus> globalRunStatusMap = new TreeMap<String, ScriptRunStatus>();
-			globalRunStatusMap.putAll(ScriptManager.INSTANCE.getNewClient(msTimeout).getRunsStatus(false, msTimeout));
-			return globalRunStatusMap;
-		} catch (URISyntaxException e) {
-			throw ServerException.getJsonException(e);
-		}
+			globalRunStatusMap.putAll(ScriptManager.INSTANCE.getNewClient(TargetRuleEnum.all, null, null).getRunsStatus(false, msTimeout));
+			return globalRunStatusMap;*/
 	}
 }

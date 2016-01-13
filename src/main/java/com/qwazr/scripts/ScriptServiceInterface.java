@@ -38,8 +38,7 @@ public interface ScriptServiceInterface {
 	@GET
 	@Path("/status")
 	@Produces(MediaType.APPLICATION_JSON)
-	Map<String, ScriptRunStatus> getRunsStatus(@QueryParam("local") Boolean local,
-			@QueryParam("timeout") Integer msTimeout);
+	Map<String, ScriptRunStatus> getRunsStatus();
 
 	@GET
 	@Path("/status/{run_id}")

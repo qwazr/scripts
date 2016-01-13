@@ -66,8 +66,8 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	};
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, Integer msTimeout) {
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS).setParameters(local, msTimeout);
+	public Map<String, ScriptRunStatus> getRunsStatus() {
+		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeOut, MapRunStatusTypeRef, 200);
 	}

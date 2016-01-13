@@ -28,7 +28,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 
 public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSingleClient>
-		implements ScriptServiceInterface {
+				implements ScriptServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(ScriptMultiClient.class);
 
@@ -82,13 +82,11 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSin
 	}
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, Integer msTimeout) {
-		if (local != null && local)
-			return getClientByUrl(ClusterManager.getInstance().myAddress).getRunsStatus(true, msTimeout);
+	public Map<String, ScriptRunStatus> getRunsStatus() {
 		TreeMap<String, ScriptRunStatus> results = new TreeMap<String, ScriptRunStatus>();
 		for (ScriptSingleClient client : this) {
 			try {
-				results.putAll(client.getRunsStatus(true, msTimeout));
+				results.putAll(client.getRunsStatus());
 			} catch (WebApplicationException e) {
 				if (e.getResponse().getStatus() != 404)
 					throw e;

@@ -16,6 +16,7 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.connectors.ConnectorManagerImpl;
 import com.qwazr.store.data.StoreDataManager;
 import com.qwazr.tools.ToolsManagerImpl;
@@ -45,7 +46,7 @@ public class ScriptManager {
 	static ScriptManager INSTANCE = null;
 
 	public synchronized static Class<? extends ScriptServiceInterface> load(ExecutorService executorService,
-			File directory) throws IOException {
+					File directory) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
@@ -107,9 +108,9 @@ public class ScriptManager {
 	}
 
 	private ScriptRunThread getNewScriptRunThread(String scriptPath, Map<String, ?> objects)
-			throws ServerException, IOException {
+					throws ServerException, IOException {
 		ScriptRunThread scriptRunThread = new ScriptRunThread(scriptEngine, getScriptFile(scriptPath), objects,
-				ConnectorManagerImpl.getInstance(), ToolsManagerImpl.getInstance());
+						ConnectorManagerImpl.getInstance(), ToolsManagerImpl.getInstance());
 		addScriptRunThread(scriptPath, scriptRunThread);
 		return scriptRunThread;
 	}
@@ -181,12 +182,13 @@ public class ScriptManager {
 		}
 	}
 
-	public ScriptServiceInterface getNewClient(Integer msTimeout) throws URISyntaxException {
+	public ScriptServiceInterface getNewClient(TargetRuleEnum target, String group, Integer msTimeout)
+					throws URISyntaxException {
 		if (!ClusterManager.getInstance().isCluster())
 			return new ScriptServiceImpl();
-		return new ScriptMultiClient(executorService,
-				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_SCRIPT, null),
-				msTimeout);
+		//TODO multiple implementation
+		return new ScriptMultiClient(executorService, ClusterManager.getInstance().getClusterClient()
+						.getActiveNodesByService(SERVICE_NAME_SCRIPT, null), msTimeout);
 	}
 
 }
