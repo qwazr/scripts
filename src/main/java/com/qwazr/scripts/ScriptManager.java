@@ -16,7 +16,6 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.connectors.ConnectorManagerImpl;
 import com.qwazr.store.data.StoreDataManager;
 import com.qwazr.tools.ToolsManagerImpl;
@@ -184,13 +183,11 @@ public class ScriptManager {
 		}
 	}
 
-	public ScriptServiceInterface getNewClient(TargetRuleEnum target, String group, Integer msTimeout)
-			throws URISyntaxException {
+	public ScriptServiceInterface getNewClient(String group, Integer msTimeout) throws URISyntaxException {
 		if (!ClusterManager.getInstance().isCluster())
 			return new ScriptSingleServiceImpl();
-		//TODO multiple implementation
 		return new ScriptMultiClient(executorService,
-				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_SCRIPT, null),
+				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_SCRIPT, group),
 				msTimeout);
 	}
 

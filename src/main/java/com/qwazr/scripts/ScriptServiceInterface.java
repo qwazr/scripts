@@ -15,9 +15,12 @@
  **/
 package com.qwazr.scripts;
 
+import com.qwazr.cluster.service.TargetRuleEnum;
+
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 import java.util.Map;
 
 @RolesAllowed(ScriptManager.SERVICE_NAME_SCRIPT)
@@ -27,13 +30,18 @@ public interface ScriptServiceInterface {
 	@GET
 	@Path("/run/{script_path : .+}")
 	@Produces(MediaType.APPLICATION_JSON)
-	ScriptRunStatus runScript(@PathParam("script_path") String scriptPath);
+	List<ScriptRunStatus> runScript(@PathParam("script_path") String scriptPath, @QueryParam("local") Boolean local,
+			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout,
+			@QueryParam("rule") TargetRuleEnum rule);
 
 	@POST
 	@Path("/run/{script_path : .+}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	ScriptRunStatus runScriptVariables(@PathParam("script_path") String scriptPath, Map<String, String> variables);
+	List<ScriptRunStatus> runScriptVariables(@PathParam("script_path") String scriptPath,
+			@QueryParam("local") Boolean local, @QueryParam("group") String group,
+			@QueryParam("timeout") Integer msTimeout, @QueryParam("rule") TargetRuleEnum rule,
+			Map<String, String> variables);
 
 	@GET
 	@Path("/status")
@@ -44,16 +52,19 @@ public interface ScriptServiceInterface {
 	@GET
 	@Path("/status/{run_id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	ScriptRunStatus getRunStatus(@PathParam("run_id") String run_id);
+	ScriptRunStatus getRunStatus(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
+			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
 	@GET
 	@Path("/status/{run_id}/out")
 	@Produces(MediaType.TEXT_PLAIN)
-	String getRunOut(@PathParam("run_id") String run_id);
+	String getRunOut(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
+			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
 	@GET
 	@Path("/status/{run_id}/err")
 	@Produces(MediaType.TEXT_PLAIN)
-	String getRunErr(@PathParam("run_id") String run_id);
+	String getRunErr(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
+			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
 }

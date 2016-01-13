@@ -16,23 +16,30 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.utils.server.ServerException;
 
 import javax.ws.rs.core.Response.Status;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 
 	@Override
-	public ScriptRunStatus runScript(String scriptPath) {
-		return runScriptVariables(scriptPath, null);
+	public List<ScriptRunStatus> runScript(String scriptPath, Boolean local, String group, Integer msTimeout,
+			TargetRuleEnum rule) {
+		return runScriptVariables(scriptPath, local, group, msTimeout, rule, null);
 	}
 
 	@Override
-	public ScriptRunStatus runScriptVariables(String scriptPath, Map<String, String> variables) {
+	public List<ScriptRunStatus> runScriptVariables(String scriptPath, Boolean local, String group, Integer msTimeout,
+			TargetRuleEnum rule, Map<String, String> variables) {
 		try {
-			return ScriptManager.INSTANCE.runAsync(scriptPath, variables);
+			if (!ClusterManager.getInstance().isGroup(group))
+				throw new ServerException(Status.NOT_FOUND, "Wrong group: " + group);
+			return Arrays.asList(ScriptManager.INSTANCE.runAsync(scriptPath, variables));
 		} catch (Exception e) {
 			throw ServerException.getJsonException(e);
 		}
@@ -46,8 +53,10 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(String run_id) {
+	public ScriptRunStatus getRunStatus(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
+			if (!ClusterManager.getInstance().isGroup(group))
+				throw new ServerException(Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getStatus();
 		} catch (ServerException e) {
 			throw e.getTextException();
@@ -55,8 +64,10 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 	}
 
 	@Override
-	public String getRunOut(String run_id) {
+	public String getRunOut(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
+			if (!ClusterManager.getInstance().isGroup(group))
+				throw new ServerException(Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getOut();
 		} catch (ServerException e) {
 			throw e.getTextException();
@@ -64,8 +75,10 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 	}
 
 	@Override
-	public String getRunErr(String run_id) {
+	public String getRunErr(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
+			if (!ClusterManager.getInstance().isGroup(group))
+				throw new ServerException(Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getErr();
 		} catch (ServerException e) {
 			throw e.getTextException();

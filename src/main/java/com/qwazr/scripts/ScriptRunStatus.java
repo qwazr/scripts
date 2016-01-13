@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import java.util.Date;
 import java.util.Set;
 
-@JsonInclude(Include.NON_EMPTY)
+@JsonInclude(Include.NON_NULL)
 public class ScriptRunStatus {
 
 	public enum ScriptState {
@@ -55,7 +55,7 @@ public class ScriptRunStatus {
 	}
 
 	ScriptRunStatus(String node, String name, String uuid, ScriptState state, Long startTime, Long endTime,
-					Set<String> bindings, Exception exception) {
+			Set<String> bindings, Exception exception) {
 		this.node = node;
 		this.start = startTime == null ? null : new Date(startTime);
 		this.end = endTime == null ? null : new Date(endTime);

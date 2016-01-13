@@ -15,6 +15,7 @@
  **/
 package com.qwazr.scripts;
 
+import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.WebAppExceptionHolder;
 import org.slf4j.Logger;
@@ -22,9 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSingleClient>
@@ -41,44 +40,71 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSin
 		return new ScriptSingleClient(url, msTimeOut);
 	}
 
-	@Override
-	public ScriptRunStatus runScript(String scriptPath) {
-		WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
+	private List<ScriptRunStatus> runScriptRuleAll(WebAppExceptionHolder exceptionHolder, String scriptPath,
+			Boolean local, String group, Integer msTimeout, TargetRuleEnum rule, Map<String, String> variables) {
+		final List<ScriptRunStatus> statusList = new ArrayList<ScriptRunStatus>(size());
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.runScript(scriptPath);
+				if (variables == null)
+					statusList.addAll(client.runScript(scriptPath, true, group, msTimeout, rule));
+				else
+					statusList.addAll(client.runScriptVariables(scriptPath, true, group, msTimeout, rule, variables));
 			} catch (WebApplicationException e) {
 				exceptionHolder.switchAndWarn(e);
 			}
 		}
 		if (exceptionHolder.getException() != null)
 			throw exceptionHolder.getException();
-		return null;
+		return statusList;
 	}
 
-	@Override
-	public ScriptRunStatus runScriptVariables(String scriptPath, Map<String, String> variables) {
-		WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
+	private List<ScriptRunStatus> runScriptRuleOne(WebAppExceptionHolder exceptionHolder, String scriptPath,
+			Boolean local, String group, Integer msTimeout, TargetRuleEnum rule, Map<String, String> variables) {
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.runScriptVariables(scriptPath, variables);
+				if (variables == null)
+					return client.runScript(scriptPath, true, group, msTimeout, rule);
+				else
+					return client.runScriptVariables(scriptPath, true, group, msTimeout, rule, variables);
 			} catch (WebApplicationException e) {
 				exceptionHolder.switchAndWarn(e);
 			}
 		}
 		if (exceptionHolder.getException() != null)
 			throw exceptionHolder.getException();
-		return null;
+		return Collections.emptyList();
 	}
 
-	public ScriptRunStatus runScript(String scriptPath, String... variables) {
+	@Override
+	public List<ScriptRunStatus> runScript(String scriptPath, Boolean local, String group, Integer msTimeout,
+			TargetRuleEnum rule) {
+		return runScriptVariables(scriptPath, local, group, msTimeout, rule, null);
+	}
+
+	@Override
+	public List<ScriptRunStatus> runScriptVariables(String scriptPath, Boolean local, String group, Integer msTimeout,
+			TargetRuleEnum rule, Map<String, String> variables) {
+		final WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
+		if (rule == null)
+			rule = TargetRuleEnum.one;
+		switch (rule) {
+		case all:
+			return runScriptRuleAll(exceptionHolder, scriptPath, local, group, msTimeout, rule, variables);
+		default:
+		case one:
+			return runScriptRuleOne(exceptionHolder, scriptPath, local, group, msTimeout, rule, variables);
+		}
+	}
+
+	public List<ScriptRunStatus> runScript(String scriptPath, Boolean local, String group, Integer msTimeout,
+			TargetRuleEnum rule, String... variables) {
 		if (variables == null || variables.length == 0)
-			return runScript(scriptPath);
+			return runScript(scriptPath, local, group, msTimeout, rule);
 		HashMap<String, String> variablesMap = new HashMap<String, String>();
 		int l = variables.length / 2;
 		for (int i = 0; i < l; i++)
 			variablesMap.put(variables[i * 2], variables[i * 2 + 1]);
-		return runScriptVariables(scriptPath, variablesMap);
+		return runScriptVariables(scriptPath, local, group, msTimeout, null, variablesMap);
 	}
 
 	@Override
@@ -96,10 +122,10 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSin
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(String run_id) {
+	public ScriptRunStatus getRunStatus(String run_id, Boolean local, String group, Integer msTimeout) {
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.getRunStatus(run_id);
+				return client.getRunStatus(run_id, true, group, msTimeout);
 			} catch (WebApplicationException e) {
 				throw e;
 			}
@@ -108,10 +134,10 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSin
 	}
 
 	@Override
-	public String getRunOut(String run_id) {
+	public String getRunOut(String run_id, Boolean local, String group, Integer msTimeout) {
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.getRunOut(run_id);
+				return client.getRunOut(run_id, true, group, msTimeout);
 			} catch (WebApplicationException e) {
 				throw e;
 			}
@@ -120,10 +146,10 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSin
 	}
 
 	@Override
-	public String getRunErr(String run_id) {
+	public String getRunErr(String run_id, Boolean local, String group, Integer msTimeout) {
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.getRunErr(run_id);
+				return client.getRunErr(run_id, true, group, msTimeout);
 			} catch (WebApplicationException e) {
 				throw e;
 			}
