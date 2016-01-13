@@ -37,7 +37,7 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 	public List<ScriptRunStatus> runScriptVariables(String scriptPath, Boolean local, String group, Integer msTimeout,
 			TargetRuleEnum rule, Map<String, String> variables) {
 		try {
-			if (!ClusterManager.getInstance().isGroup(group))
+			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Wrong group: " + group);
 			return Arrays.asList(ScriptManager.INSTANCE.runAsync(scriptPath, variables));
 		} catch (Exception e) {
@@ -55,7 +55,7 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 	@Override
 	public ScriptRunStatus getRunStatus(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
-			if (!ClusterManager.getInstance().isGroup(group))
+			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getStatus();
 		} catch (ServerException e) {
@@ -66,7 +66,7 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 	@Override
 	public String getRunOut(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
-			if (!ClusterManager.getInstance().isGroup(group))
+			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getOut();
 		} catch (ServerException e) {
@@ -77,7 +77,7 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 	@Override
 	public String getRunErr(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
-			if (!ClusterManager.getInstance().isGroup(group))
+			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getErr();
 		} catch (ServerException e) {
@@ -87,7 +87,7 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, String group, Integer msTimeout) {
-		if (!ClusterManager.getInstance().isGroup(group))
+		if (!ClusterManager.INSTANCE.isGroup(group))
 			return Collections.emptyMap();
 		return ScriptManager.INSTANCE.getRunsStatus();
 	}

@@ -18,7 +18,9 @@ package com.qwazr.scripts;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @JsonInclude(Include.NON_NULL)
@@ -67,5 +69,27 @@ public class ScriptRunStatus {
 		this.name = name;
 		this.state = state;
 		this.error = exception == null ? null : exception.getMessage();
+	}
+
+	private ScriptRunStatus(ScriptRunStatus src, Long startTime) {
+		this.node = src.node;
+		this.name = src.name;
+		this.uuid = src.uuid;
+		this.start = startTime == null ? null : new Date(startTime);
+		this.error = src.error;
+		this._status = src._status;
+		this._std_out = null;
+		this._std_err = null;
+		this.state = null;
+		this.end = null;
+		this.bindings = null;
+	}
+
+	public static List<ScriptRunStatus> cloneSchedulerResultList(List<ScriptRunStatus> sources, Long startTime) {
+		if (sources == null)
+			return null;
+		final List<ScriptRunStatus> list = new ArrayList<ScriptRunStatus>(sources.size());
+		sources.forEach(scriptRunStatus -> list.add(new ScriptRunStatus(scriptRunStatus, startTime)));
+		return list;
 	}
 }

@@ -30,7 +30,7 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 	public List<ScriptRunStatus> runScript(String scriptPath, Boolean local, String group, Integer msTimeout,
 			TargetRuleEnum rule) {
 		if (local != null && local)
-			return runScript(scriptPath, local, group, msTimeout, rule);
+			return super.runScript(scriptPath, local, group, msTimeout, rule);
 		try {
 			return getMultiClient(group, msTimeout).runScript(scriptPath, local, group, msTimeout, rule);
 		} catch (URISyntaxException e) {
@@ -42,7 +42,7 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 	public List<ScriptRunStatus> runScriptVariables(String scriptPath, Boolean local, String group, Integer msTimeout,
 			TargetRuleEnum rule, Map<String, String> variables) {
 		if (local != null && local)
-			return runScriptVariables(scriptPath, local, group, msTimeout, rule, variables);
+			return super.runScriptVariables(scriptPath, local, group, msTimeout, rule, variables);
 		return runScriptVariables(scriptPath, local, group, msTimeout, rule, variables);
 	}
 
@@ -56,7 +56,7 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 	@Override
 	public ScriptRunStatus getRunStatus(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
-			if (!ClusterManager.getInstance().isGroup(group))
+			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Response.Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getStatus();
 		} catch (ServerException e) {
@@ -67,7 +67,7 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 	@Override
 	public String getRunOut(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
-			if (!ClusterManager.getInstance().isGroup(group))
+			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Response.Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getOut();
 		} catch (ServerException e) {
@@ -78,7 +78,7 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 	@Override
 	public String getRunErr(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
-			if (!ClusterManager.getInstance().isGroup(group))
+			if (!ClusterManager.INSTANCE.isGroup(group))
 				throw new ServerException(Response.Status.NOT_FOUND, "Wrong group: " + group);
 			return getRunThread(run_id).getErr();
 		} catch (ServerException e) {
@@ -98,7 +98,7 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 	}
 
 	public static ScriptMultiClient getMultiClient(String group, Integer msTimeout) throws URISyntaxException {
-		String[] urls = ClusterManager.getInstance().getClusterClient()
+		String[] urls = ClusterManager.INSTANCE.getClusterClient()
 				.getActiveNodesByService(ScriptManager.SERVICE_NAME_SCRIPT, group);
 		return new ScriptMultiClient(ScriptManager.INSTANCE.executorService, urls, msTimeout);
 	}
