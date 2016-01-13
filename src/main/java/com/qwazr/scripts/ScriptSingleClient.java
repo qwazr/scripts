@@ -43,7 +43,7 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	public ScriptRunStatus runScript(String scriptPath) {
 		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_RUN, scriptPath);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, ScriptRunStatus.class, 200, 202);
+		return commonServiceRequest(request, null, null, ScriptRunStatus.class, 200, 202);
 	}
 
 	@Override
@@ -52,24 +52,24 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 			return runScript(scriptPath);
 		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_RUN, scriptPath);
 		Request request = Request.Post(uriBuilder.build());
-		return commonServiceRequest(request, variables, msTimeOut, ScriptRunStatus.class, 200, 202);
+		return commonServiceRequest(request, variables, null, ScriptRunStatus.class, 200, 202);
 	}
 
 	@Override
 	public ScriptRunStatus getRunStatus(String run_id) {
 		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, ScriptRunStatus.class, 200);
+		return commonServiceRequest(request, null, null, ScriptRunStatus.class, 200);
 	}
 
 	public final static TypeReference<TreeMap<String, ScriptRunStatus>> MapRunStatusTypeRef = new TypeReference<TreeMap<String, ScriptRunStatus>>() {
 	};
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus() {
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS);
+	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, String group, Integer msTimeout) {
+		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS).setParameters(local, group, msTimeout);
 		Request request = Request.Get(uriBuilder.build());
-		return commonServiceRequest(request, null, msTimeOut, MapRunStatusTypeRef, 200);
+		return commonServiceRequest(request, null, null, MapRunStatusTypeRef, 200);
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 		try {
 			UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/out");
 			Request request = Request.Get(uriBuilder.build());
-			HttpResponse response = execute(request, null, msTimeOut);
+			HttpResponse response = execute(request, null, null);
 			return HttpUtils.checkTextPlainEntity(response, 200);
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
@@ -91,7 +91,7 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 		try {
 			UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/err");
 			Request request = Request.Get(uriBuilder.build());
-			HttpResponse response = execute(request, null, msTimeOut);
+			HttpResponse response = execute(request, null, null);
 			return HttpUtils.checkTextPlainEntity(response, 200);
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();

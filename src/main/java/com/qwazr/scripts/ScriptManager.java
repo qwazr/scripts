@@ -46,12 +46,14 @@ public class ScriptManager {
 	static ScriptManager INSTANCE = null;
 
 	public synchronized static Class<? extends ScriptServiceInterface> load(ExecutorService executorService,
-					File directory) throws IOException {
+			File directory) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
 			INSTANCE = new ScriptManager(executorService, directory);
-			return ScriptServiceImpl.class;
+			return ClusterManager.getInstance().isCluster() ?
+					ScriptClusterServiceImpl.class :
+					ScriptSingleServiceImpl.class;
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
@@ -68,7 +70,7 @@ public class ScriptManager {
 	private final ReadWriteLock runsMapLock = new ReadWriteLock();
 	private final HashMap<String, ScriptRunThread> runsMap;
 
-	private final ExecutorService executorService;
+	final ExecutorService executorService;
 
 	private ScriptManager(ExecutorService executorService, File rootDirectory) throws IOException, URISyntaxException {
 
@@ -108,9 +110,9 @@ public class ScriptManager {
 	}
 
 	private ScriptRunThread getNewScriptRunThread(String scriptPath, Map<String, ?> objects)
-					throws ServerException, IOException {
+			throws ServerException, IOException {
 		ScriptRunThread scriptRunThread = new ScriptRunThread(scriptEngine, getScriptFile(scriptPath), objects,
-						ConnectorManagerImpl.getInstance(), ToolsManagerImpl.getInstance());
+				ConnectorManagerImpl.getInstance(), ToolsManagerImpl.getInstance());
 		addScriptRunThread(scriptPath, scriptRunThread);
 		return scriptRunThread;
 	}
@@ -183,12 +185,13 @@ public class ScriptManager {
 	}
 
 	public ScriptServiceInterface getNewClient(TargetRuleEnum target, String group, Integer msTimeout)
-					throws URISyntaxException {
+			throws URISyntaxException {
 		if (!ClusterManager.getInstance().isCluster())
-			return new ScriptServiceImpl();
+			return new ScriptSingleServiceImpl();
 		//TODO multiple implementation
-		return new ScriptMultiClient(executorService, ClusterManager.getInstance().getClusterClient()
-						.getActiveNodesByService(SERVICE_NAME_SCRIPT, null), msTimeout);
+		return new ScriptMultiClient(executorService,
+				ClusterManager.getInstance().getClusterClient().getActiveNodesByService(SERVICE_NAME_SCRIPT, null),
+				msTimeout);
 	}
 
 }

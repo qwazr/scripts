@@ -15,12 +15,14 @@
  **/
 package com.qwazr.scripts;
 
+import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.server.ServerException;
 
 import javax.ws.rs.core.Response.Status;
+import java.util.Collections;
 import java.util.Map;
 
-public class ScriptServiceImpl implements ScriptServiceInterface {
+public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 
 	@Override
 	public ScriptRunStatus runScript(String scriptPath) {
@@ -71,17 +73,9 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 	}
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus() {
+	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, String group, Integer msTimeout) {
+		if (!ClusterManager.getInstance().isGroup(group))
+			return Collections.emptyMap();
 		return ScriptManager.INSTANCE.getRunsStatus();
-			/*
-			if (local != null && local) {
-				Map<String, ScriptRunStatus> localRunStatusMap = ScriptManager.INSTANCE.getRunsStatus();
-				if (localRunStatusMap == null)
-					localRunStatusMap = Collections.emptyMap();
-				return localRunStatusMap;
-			}
-			TreeMap<String, ScriptRunStatus> globalRunStatusMap = new TreeMap<String, ScriptRunStatus>();
-			globalRunStatusMap.putAll(ScriptManager.INSTANCE.getNewClient(TargetRuleEnum.all, null, null).getRunsStatus(false, msTimeout));
-			return globalRunStatusMap;*/
 	}
 }

@@ -167,8 +167,8 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 
 	public class ScriptSemaphore {
 
-		public Set<String> owners(String semaphore_id, Boolean local, Integer timeOut) {
-			return SemaphoresManager.getService().getSemaphoreOwners(semaphore_id);
+		public Set<String> owners(String semaphore_id, Boolean local, String group, Integer msTimeout) {
+			return SemaphoresManager.getService().getSemaphoreOwners(semaphore_id, local, group, msTimeout);
 		}
 
 		public void register(String semaphore_id) {

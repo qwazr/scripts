@@ -15,8 +15,8 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
+import com.qwazr.utils.server.WebAppExceptionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 
 public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSingleClient>
-				implements ScriptServiceInterface {
+		implements ScriptServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(ScriptMultiClient.class);
 
@@ -82,11 +82,11 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSin
 	}
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus() {
+	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, String group, Integer msTimeout) {
 		TreeMap<String, ScriptRunStatus> results = new TreeMap<String, ScriptRunStatus>();
 		for (ScriptSingleClient client : this) {
 			try {
-				results.putAll(client.getRunsStatus());
+				results.putAll(client.getRunsStatus(true, group, msTimeout));
 			} catch (WebApplicationException e) {
 				if (e.getResponse().getStatus() != 404)
 					throw e;
