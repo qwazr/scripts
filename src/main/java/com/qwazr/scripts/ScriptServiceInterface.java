@@ -16,6 +16,8 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.utils.server.ServiceInterface;
+import com.qwazr.utils.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
@@ -25,46 +27,47 @@ import java.util.Map;
 
 @RolesAllowed(ScriptManager.SERVICE_NAME_SCRIPT)
 @Path("/scripts")
-public interface ScriptServiceInterface {
+@ServiceName(ScriptManager.SERVICE_NAME_SCRIPT)
+public interface ScriptServiceInterface extends ServiceInterface {
 
 	@GET
 	@Path("/run/{script_path : .+}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	List<ScriptRunStatus> runScript(@PathParam("script_path") String scriptPath, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout,
-			@QueryParam("rule") TargetRuleEnum rule);
+					@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout,
+					@QueryParam("rule") TargetRuleEnum rule);
 
 	@POST
 	@Path("/run/{script_path : .+}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	List<ScriptRunStatus> runScriptVariables(@PathParam("script_path") String scriptPath,
-			@QueryParam("local") Boolean local, @QueryParam("group") String group,
-			@QueryParam("timeout") Integer msTimeout, @QueryParam("rule") TargetRuleEnum rule,
-			Map<String, String> variables);
+					@QueryParam("local") Boolean local, @QueryParam("group") String group,
+					@QueryParam("timeout") Integer msTimeout, @QueryParam("rule") TargetRuleEnum rule,
+					Map<String, String> variables);
 
 	@GET
 	@Path("/status")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Map<String, ScriptRunStatus> getRunsStatus(@QueryParam("local") Boolean local, @QueryParam("group") String group,
-			@QueryParam("timeout") Integer msTimeout);
+					@QueryParam("timeout") Integer msTimeout);
 
 	@GET
 	@Path("/status/{run_id}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	ScriptRunStatus getRunStatus(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
+					@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
 	@GET
 	@Path("/status/{run_id}/out")
 	@Produces(MediaType.TEXT_PLAIN)
 	String getRunOut(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
+					@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
 	@GET
 	@Path("/status/{run_id}/err")
 	@Produces(MediaType.TEXT_PLAIN)
 	String getRunErr(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
+					@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
 }
