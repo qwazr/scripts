@@ -22,6 +22,7 @@ import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.connectors.ConnectorManager;
 import com.qwazr.scripts.ScriptRunStatus.ScriptState;
 import com.qwazr.semaphores.SemaphoresManager;
+import com.qwazr.semaphores.SemaphoresServiceInterface;
 import com.qwazr.tools.ToolsManager;
 import com.qwazr.utils.IOUtils;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import javax.script.SimpleScriptContext;
 import java.io.File;
 import java.io.FileReader;
 import java.io.StringWriter;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -167,8 +169,9 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 
 	public class ScriptSemaphore {
 
-		public Set<String> owners(String semaphore_id, Boolean local, String group, Integer msTimeout) {
-			return SemaphoresManager.getService().getSemaphoreOwners(semaphore_id, local, group, msTimeout);
+		public Set<String> owners(String semaphore_id, Boolean local, String group, Integer msTimeout)
+				throws URISyntaxException {
+			return SemaphoresServiceInterface.getClient().getSemaphoreOwners(semaphore_id, local, group, msTimeout);
 		}
 
 		public void register(String semaphore_id) {
