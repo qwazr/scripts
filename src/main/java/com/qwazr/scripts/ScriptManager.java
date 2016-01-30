@@ -16,9 +16,6 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.connectors.ConnectorManagerImpl;
-import com.qwazr.store.data.StoreDataManager;
-import com.qwazr.tools.ToolsManagerImpl;
 import com.qwazr.utils.LockUtils.ReadWriteLock;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
@@ -82,13 +79,7 @@ public class ScriptManager {
 	private File getScriptFile(String scriptPath) throws ServerException {
 		if (StringUtils.isEmpty(scriptPath))
 			throw new ServerException(Status.NOT_ACCEPTABLE, "No path given");
-		final File scriptFile;
-		if (scriptPath.startsWith("/")) {
-			if (StoreDataManager.INSTANCE == null)
-				throw new ServerException(Status.INTERNAL_SERVER_ERROR, "No store available: " + scriptPath);
-			scriptFile = StoreDataManager.INSTANCE.getFile(scriptPath);
-		} else
-			scriptFile = new File(scriptPath);
+		final File scriptFile = new File(scriptPath);
 		if (!scriptFile.exists())
 			throw new ServerException(Status.NOT_FOUND, "Script not found: " + scriptPath);
 		if (!scriptFile.isFile())
@@ -108,8 +99,7 @@ public class ScriptManager {
 
 	private ScriptRunThread getNewScriptRunThread(String scriptPath, Map<String, ?> objects)
 			throws ServerException, IOException {
-		ScriptRunThread scriptRunThread = new ScriptRunThread(scriptEngine, getScriptFile(scriptPath), objects,
-				ConnectorManagerImpl.getInstance(), ToolsManagerImpl.getInstance());
+		ScriptRunThread scriptRunThread = new ScriptRunThread(scriptEngine, getScriptFile(scriptPath), objects);
 		addScriptRunThread(scriptPath, scriptRunThread);
 		return scriptRunThread;
 	}

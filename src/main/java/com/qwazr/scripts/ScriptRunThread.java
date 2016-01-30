@@ -19,11 +19,10 @@ import com.datastax.driver.core.utils.UUIDs;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.connectors.ConnectorManager;
+import com.qwazr.library.LibraryManager;
 import com.qwazr.scripts.ScriptRunStatus.ScriptState;
 import com.qwazr.semaphores.SemaphoresManager;
 import com.qwazr.semaphores.SemaphoresServiceInterface;
-import com.qwazr.tools.ToolsManager;
 import com.qwazr.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +58,7 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 	private final ScriptEngine scriptEngine;
 	private final File scriptFile;
 
-	ScriptRunThread(ScriptEngine scriptEngine, File scriptFile, Map<String, ?> bindings, ConnectorManager connectors,
-			ToolsManager tools) {
+	ScriptRunThread(ScriptEngine scriptEngine, File scriptFile, Map<String, ?> bindings) {
 		uuid = UUIDs.timeBased().toString();
 		state = ScriptState.ready;
 		startTime = null;
@@ -73,10 +71,12 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 		this.closeables = new IOUtils.CloseableList();
 		if (bindings != null)
 			engineScope.putAll(bindings);
-		if (connectors != null)
-			engineScope.put("connectors", connectors);
-		if (tools != null)
-			engineScope.put("tools", tools);
+		LibraryManager libraries = LibraryManager.getInstance();
+		if (libraries != null) {
+			engineScope.put("connectors", libraries); // Todo: To remove, deprecated
+			engineScope.put("tools", libraries); // Todo: To remove, deprecated
+			engineScope.put("library", libraries);
+		}
 		engineScope.put("closeable", closeables);
 		this.scriptFile = scriptFile;
 		this.setWriter(new StringWriter());
