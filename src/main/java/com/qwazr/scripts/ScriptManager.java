@@ -171,12 +171,4 @@ public class ScriptManager {
 		}
 	}
 
-	public ScriptServiceInterface getNewClient(String group, Integer msTimeout) throws URISyntaxException {
-		if (!ClusterManager.INSTANCE.isCluster())
-			return new ScriptSingleServiceImpl();
-		return new ScriptMultiClient(executorService,
-				ClusterManager.INSTANCE.getClusterClient().getActiveNodesByService(SERVICE_NAME_SCRIPT, group),
-				msTimeout);
-	}
-
 }
