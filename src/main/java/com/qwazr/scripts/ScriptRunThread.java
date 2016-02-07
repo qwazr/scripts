@@ -72,11 +72,8 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 		if (bindings != null)
 			engineScope.putAll(bindings);
 		LibraryManager libraries = LibraryManager.getInstance();
-		if (libraries != null) {
-			engineScope.put("connectors", libraries); // Todo: To remove, deprecated
-			engineScope.put("tools", libraries); // Todo: To remove, deprecated
+		if (libraries != null)
 			engineScope.put("library", libraries);
-		}
 		engineScope.put("closeable", closeables);
 		this.scriptFile = scriptFile;
 		this.setWriter(new StringWriter());

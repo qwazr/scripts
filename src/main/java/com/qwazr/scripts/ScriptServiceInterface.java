@@ -23,6 +23,7 @@ import com.qwazr.utils.server.ServiceName;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
@@ -72,8 +73,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	String getRunErr(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
 			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
 
-	public static ScriptServiceInterface getClient(Boolean local, String group, Integer msTimeout)
-			throws URISyntaxException {
+	static ScriptServiceInterface getClient(Boolean local, String group, Integer msTimeout) throws URISyntaxException {
 		if (local != null && local)
 			return new ScriptSingleServiceImpl();
 		if (!ClusterManager.INSTANCE.isCluster())
@@ -81,7 +81,10 @@ public interface ScriptServiceInterface extends ServiceInterface {
 		String[] nodes = ClusterManager.INSTANCE.getClusterClient()
 				.getActiveNodesByService(ScriptManager.SERVICE_NAME_SCRIPT, group);
 		if (nodes == null)
-			throw new RuntimeException("Script service not available");
+			throw new WebApplicationException("The script service is not available");
+		if (nodes.length == 0)
+			throw new WebApplicationException("No available script node for the group: " + group,
+					Response.Status.EXPECTATION_FAILED);
 		if (nodes.length == 1)
 			return new ScriptSingleClient(nodes[0], msTimeout);
 		return new ScriptMultiClient(ClusterManager.INSTANCE.executor, nodes, msTimeout);
