@@ -152,7 +152,7 @@ public class ScriptRunThread extends SimpleScriptContext implements Runnable {
 		/**
 		 *
 		 */
-		private final long serialVersionUID = -7250097260119419346L;
+		private static final long serialVersionUID = -7250097260119419346L;
 
 		private GlobalBindings() {
 			this.put("console", new ScriptConsole());
