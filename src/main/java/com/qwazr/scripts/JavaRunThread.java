@@ -24,14 +24,16 @@ import java.util.Objects;
 
 public class JavaRunThread extends RunThreadAbstract {
 
-	private final Map<String, ?> variables;
+	private final Map<String, Object> variables;
 	private final Class<?> scriptClass;
 
 	JavaRunThread(String className, Map<String, ?> initialVariables) throws ClassNotFoundException {
 		super(className, initialVariables);
 		scriptClass = ClassLoaderManager.findClass(className);
 		Objects.requireNonNull(scriptClass, "Class not found: " + className);
-		variables = initialVariables == null ? null : new HashMap<>(initialVariables);
+		variables = new HashMap<>();
+		if (initialVariables != null)
+			variables.putAll(initialVariables);
 	}
 
 	@Override
