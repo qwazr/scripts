@@ -62,7 +62,7 @@ public class ScriptManager {
 	private final ScriptEngine scriptEngine;
 
 	private final ReadWriteLock runsMapLock = new ReadWriteLock();
-	private final HashMap<String, ScriptRunThread> runsMap;
+	private final HashMap<String, RunThreadAbstract> runsMap;
 
 	final ExecutorService executorService;
 
@@ -71,8 +71,7 @@ public class ScriptManager {
 		// Load Nashorn
 		ScriptEngineManager manager = new ScriptEngineManager();
 		scriptEngine = manager.getEngineByName("nashorn");
-
-		runsMap = new HashMap<String, ScriptRunThread>();
+		runsMap = new HashMap<String, RunThreadAbstract>();
 		this.executorService = executorService;
 	}
 
@@ -97,32 +96,38 @@ public class ScriptManager {
 		}
 	}
 
-	private ScriptRunThread getNewScriptRunThread(String scriptPath, Map<String, ?> objects)
-			throws ServerException, IOException {
-		ScriptRunThread scriptRunThread = new ScriptRunThread(scriptEngine, getScriptFile(scriptPath), objects);
+	private RunThreadAbstract getNewScriptRunThread(String scriptPath, Map<String, ?> objects)
+			throws ServerException, IOException, ClassNotFoundException {
+		final RunThreadAbstract scriptRunThread;
+		if (scriptPath.endsWith(".js"))
+			scriptRunThread = new JsRunThread(scriptEngine, getScriptFile(scriptPath), objects);
+		else
+			scriptRunThread = new JavaRunThread(scriptPath, objects);
 		addScriptRunThread(scriptPath, scriptRunThread);
 		return scriptRunThread;
 	}
 
-	public ScriptRunThread runSync(String scriptPath, Map<String, ?> objects) throws ServerException, IOException {
+	public RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects)
+			throws ServerException, IOException, ClassNotFoundException {
 		if (logger.isInfoEnabled())
 			logger.info("Run sync: " + scriptPath);
-		ScriptRunThread scriptRunThread = getNewScriptRunThread(scriptPath, objects);
+		RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		scriptRunThread.run();
 		expireScriptRunThread();
 		return scriptRunThread;
 	}
 
-	public ScriptRunStatus runAsync(String scriptPath, Map<String, ?> objects) throws ServerException, IOException {
+	public ScriptRunStatus runAsync(String scriptPath, Map<String, ?> objects)
+			throws ServerException, IOException, ClassNotFoundException {
 		if (logger.isInfoEnabled())
 			logger.info("Run async: " + scriptPath);
-		ScriptRunThread scriptRunThread = getNewScriptRunThread(scriptPath, objects);
+		RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		executorService.execute(scriptRunThread);
 		expireScriptRunThread();
 		return scriptRunThread.getStatus();
 	}
 
-	private void addScriptRunThread(String scriptPath, ScriptRunThread scriptRunThread) {
+	private void addScriptRunThread(String scriptPath, RunThreadAbstract scriptRunThread) {
 		if (scriptRunThread == null)
 			return;
 		runsMapLock.w.lock();
@@ -138,7 +143,7 @@ public class ScriptManager {
 		try {
 			List<String> uuidsToDelete = new ArrayList<String>();
 			long currentTime = System.currentTimeMillis();
-			for (ScriptRunThread scriptRunThread : runsMap.values())
+			for (RunThreadAbstract scriptRunThread : runsMap.values())
 				if (scriptRunThread.hasExpired(currentTime))
 					uuidsToDelete.add(scriptRunThread.getUUID());
 			for (String uuid : uuidsToDelete)
@@ -154,7 +159,7 @@ public class ScriptManager {
 		runsMapLock.r.lock();
 		try {
 			LinkedHashMap<String, ScriptRunStatus> runStatusMap = new LinkedHashMap<String, ScriptRunStatus>();
-			for (Map.Entry<String, ScriptRunThread> entry : runsMap.entrySet())
+			for (Map.Entry<String, RunThreadAbstract> entry : runsMap.entrySet())
 				runStatusMap.put(entry.getKey(), entry.getValue().getStatus());
 			return runStatusMap;
 		} finally {
@@ -162,7 +167,7 @@ public class ScriptManager {
 		}
 	}
 
-	ScriptRunThread getRunThread(String uuid) {
+	RunThreadAbstract getRunThread(String uuid) {
 		runsMapLock.r.lock();
 		try {
 			return runsMap.get(uuid);

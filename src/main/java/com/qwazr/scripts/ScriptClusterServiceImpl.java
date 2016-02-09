@@ -46,8 +46,8 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 		return runScriptVariables(scriptPath, local, group, msTimeout, rule, variables);
 	}
 
-	private ScriptRunThread getRunThread(String run_id) throws ServerException {
-		ScriptRunThread runThread = ScriptManager.INSTANCE.getRunThread(run_id);
+	private RunThreadAbstract getRunThread(String run_id) throws ServerException {
+		RunThreadAbstract runThread = ScriptManager.INSTANCE.getRunThread(run_id);
 		if (runThread == null)
 			throw new ServerException(Response.Status.NOT_FOUND, "No status found");
 		return runThread;

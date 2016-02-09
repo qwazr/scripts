@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2016 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
+
 package com.qwazr.scripts;
 
-public interface ScriptRunThread {
+import java.util.Map;
 
-	Exception getException();
+public interface ScriptInterface {
 
-	String getUUID();
-
-	ScriptRunStatus getStatus();
-
-	boolean hasExpired(long currentTime);
-
-	String getOut();
-
-	String getErr();
-
+	void run(Map<String, ?> variables) throws Exception;
 }

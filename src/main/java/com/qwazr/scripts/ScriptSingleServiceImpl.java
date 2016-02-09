@@ -45,8 +45,8 @@ public class ScriptSingleServiceImpl implements ScriptServiceInterface {
 		}
 	}
 
-	private ScriptRunThread getRunThread(String run_id) throws ServerException {
-		ScriptRunThread runThread = ScriptManager.INSTANCE.getRunThread(run_id);
+	private RunThreadAbstract getRunThread(String run_id) throws ServerException {
+		RunThreadAbstract runThread = ScriptManager.INSTANCE.getRunThread(run_id);
 		if (runThread == null)
 			throw new ServerException(Status.NOT_FOUND, "No status found");
 		return runThread;
