@@ -20,13 +20,13 @@ import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -37,12 +37,13 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	private final static String SCRIPT_PREFIX_RUN = SCRIPT_PREFIX + "run/";
 	private final static String SCRIPT_PREFIX_STATUS = SCRIPT_PREFIX + "status/";
 
-	ScriptSingleClient(String url, Integer msTimeOut) throws URISyntaxException {
-		super(url, msTimeOut);
+	ScriptSingleClient(final RemoteService remote) {
+		super(remote);
 	}
 
-	public final static TypeReference<List<ScriptRunStatus>> ListRunStatusTypeRef = new TypeReference<List<ScriptRunStatus>>() {
-	};
+	public final static TypeReference<List<ScriptRunStatus>> ListRunStatusTypeRef =
+			new TypeReference<List<ScriptRunStatus>>() {
+			};
 
 	@Override
 	public List<ScriptRunStatus> runScript(String scriptPath, Boolean local, String group, Integer msTimeout,
@@ -71,8 +72,9 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 		return commonServiceRequest(request, null, null, ScriptRunStatus.class, 200);
 	}
 
-	public final static TypeReference<TreeMap<String, ScriptRunStatus>> MapRunStatusTypeRef = new TypeReference<TreeMap<String, ScriptRunStatus>>() {
-	};
+	public final static TypeReference<TreeMap<String, ScriptRunStatus>> MapRunStatusTypeRef =
+			new TypeReference<TreeMap<String, ScriptRunStatus>>() {
+			};
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, String group, Integer msTimeout) {
@@ -84,8 +86,8 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	@Override
 	public String getRunOut(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
-			UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/out")
-					.setParameters(local, group, msTimeout);
+			UBuilder uriBuilder =
+					new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/out").setParameters(local, group, msTimeout);
 			Request request = Request.Get(uriBuilder.build());
 			HttpResponse response = execute(request, null, null);
 			return HttpUtils.checkTextPlainEntity(response, 200);
@@ -99,8 +101,8 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	@Override
 	public String getRunErr(String run_id, Boolean local, String group, Integer msTimeout) {
 		try {
-			UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/err")
-					.setParameters(local, group, msTimeout);
+			UBuilder uriBuilder =
+					new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/err").setParameters(local, group, msTimeout);
 			Request request = Request.Get(uriBuilder.build());
 			HttpResponse response = execute(request, null, null);
 			return HttpUtils.checkTextPlainEntity(response, 200);

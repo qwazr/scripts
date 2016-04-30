@@ -17,6 +17,7 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServiceInterface;
 import com.qwazr.utils.server.ServiceName;
 
@@ -86,8 +87,8 @@ public interface ScriptServiceInterface extends ServiceInterface {
 			throw new WebApplicationException("No available script node for the group: " + group,
 					Response.Status.EXPECTATION_FAILED);
 		if (nodes.length == 1)
-			return new ScriptSingleClient(nodes[0], msTimeout);
-		return new ScriptMultiClient(ClusterManager.INSTANCE.executor, nodes, msTimeout);
+			return new ScriptSingleClient(new RemoteService(nodes[0]));
+		return new ScriptMultiClient(ClusterManager.INSTANCE.executor, RemoteService.build(nodes));
 	}
 
 }

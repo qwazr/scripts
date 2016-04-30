@@ -17,6 +17,7 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
 
 import javax.ws.rs.core.Response;
@@ -32,7 +33,7 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 		if (local != null && local)
 			return super.runScript(scriptPath, local, group, msTimeout, rule);
 		try {
-			return getMultiClient(group, msTimeout).runScript(scriptPath, local, group, msTimeout, rule);
+			return getMultiClient(group).runScript(scriptPath, local, group, msTimeout, rule);
 		} catch (URISyntaxException e) {
 			throw ServerException.getJsonException(e);
 		}
@@ -91,15 +92,15 @@ public class ScriptClusterServiceImpl extends ScriptSingleServiceImpl {
 		if (local != null && local)
 			return super.getRunsStatus(local, group, msTimeout);
 		try {
-			return getMultiClient(group, msTimeout).getRunsStatus(false, group, msTimeout);
+			return getMultiClient(group).getRunsStatus(false, group, msTimeout);
 		} catch (URISyntaxException e) {
 			throw ServerException.getJsonException(e);
 		}
 	}
 
-	public static ScriptMultiClient getMultiClient(String group, Integer msTimeout) throws URISyntaxException {
+	public static ScriptMultiClient getMultiClient(String group) throws URISyntaxException {
 		String[] urls = ClusterManager.INSTANCE.getClusterClient()
 				.getActiveNodesByService(ScriptManager.SERVICE_NAME_SCRIPT, group);
-		return new ScriptMultiClient(ScriptManager.INSTANCE.executorService, urls, msTimeout);
+		return new ScriptMultiClient(ScriptManager.INSTANCE.executorService, RemoteService.build(urls));
 	}
 }

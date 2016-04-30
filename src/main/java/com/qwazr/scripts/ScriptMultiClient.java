@@ -17,27 +17,26 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.WebAppExceptionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
-public class ScriptMultiClient extends JsonMultiClientAbstract<String, ScriptSingleClient>
-		implements ScriptServiceInterface {
+public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> implements ScriptServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(ScriptMultiClient.class);
 
-	public ScriptMultiClient(ExecutorService executor, String[] urls, Integer msTimeout) throws URISyntaxException {
-		super(executor, new ScriptSingleClient[urls.length], urls, msTimeout);
+	public ScriptMultiClient(ExecutorService executor, RemoteService... remotes) {
+		super(executor, new ScriptSingleClient[remotes.length], remotes);
 	}
 
 	@Override
-	protected ScriptSingleClient newClient(String url, Integer msTimeOut) throws URISyntaxException {
-		return new ScriptSingleClient(url, msTimeOut);
+	protected ScriptSingleClient newClient(RemoteService remote) {
+		return new ScriptSingleClient(remote);
 	}
 
 	private List<ScriptRunStatus> runScriptRuleAll(WebAppExceptionHolder exceptionHolder, String scriptPath,
