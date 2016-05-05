@@ -39,15 +39,15 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 		return new ScriptSingleClient(remote);
 	}
 
-	private List<ScriptRunStatus> runScriptRuleAll(WebAppExceptionHolder exceptionHolder, String scriptPath,
-			Boolean local, String group, Integer msTimeout, TargetRuleEnum rule, Map<String, String> variables) {
-		final List<ScriptRunStatus> statusList = new ArrayList<ScriptRunStatus>(size());
+	private List<ScriptRunStatus> runScriptRuleAll(final WebAppExceptionHolder exceptionHolder, final String scriptPath,
+			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
+		final List<ScriptRunStatus> statusList = new ArrayList<>(size());
 		for (ScriptSingleClient client : this) {
 			try {
 				if (variables == null)
-					statusList.addAll(client.runScript(scriptPath, true, group, msTimeout, rule));
+					statusList.addAll(client.runScript(scriptPath, group, rule));
 				else
-					statusList.addAll(client.runScriptVariables(scriptPath, true, group, msTimeout, rule, variables));
+					statusList.addAll(client.runScriptVariables(scriptPath, group, rule, variables));
 			} catch (WebApplicationException e) {
 				exceptionHolder.switchAndWarn(e);
 			}
@@ -57,14 +57,14 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 		return statusList;
 	}
 
-	private List<ScriptRunStatus> runScriptRuleOne(WebAppExceptionHolder exceptionHolder, String scriptPath,
-			Boolean local, String group, Integer msTimeout, TargetRuleEnum rule, Map<String, String> variables) {
+	private List<ScriptRunStatus> runScriptRuleOne(final WebAppExceptionHolder exceptionHolder, final String scriptPath,
+			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
 		for (ScriptSingleClient client : this) {
 			try {
 				if (variables == null)
-					return client.runScript(scriptPath, true, group, msTimeout, rule);
+					return client.runScript(scriptPath, group, rule);
 				else
-					return client.runScriptVariables(scriptPath, true, group, msTimeout, rule, variables);
+					return client.runScriptVariables(scriptPath, group, rule, variables);
 			} catch (WebApplicationException e) {
 				exceptionHolder.switchAndWarn(e);
 			}
@@ -75,43 +75,42 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScript(String scriptPath, Boolean local, String group, Integer msTimeout,
-			TargetRuleEnum rule) {
-		return runScriptVariables(scriptPath, local, group, msTimeout, rule, null);
+	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
+		return runScriptVariables(scriptPath, group, rule, null);
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScriptVariables(String scriptPath, Boolean local, String group, Integer msTimeout,
-			TargetRuleEnum rule, Map<String, String> variables) {
+	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group, TargetRuleEnum rule,
+			Map<String, String> variables) {
 		final WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
 		if (rule == null)
 			rule = TargetRuleEnum.one;
 		switch (rule) {
 		case all:
-			return runScriptRuleAll(exceptionHolder, scriptPath, local, group, msTimeout, rule, variables);
+			return runScriptRuleAll(exceptionHolder, scriptPath, group, rule, variables);
 		default:
 		case one:
-			return runScriptRuleOne(exceptionHolder, scriptPath, local, group, msTimeout, rule, variables);
+			return runScriptRuleOne(exceptionHolder, scriptPath, group, rule, variables);
 		}
 	}
 
-	public List<ScriptRunStatus> runScript(String scriptPath, Boolean local, String group, Integer msTimeout,
-			TargetRuleEnum rule, String... variables) {
+	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule,
+			final String... variables) {
 		if (variables == null || variables.length == 0)
-			return runScript(scriptPath, local, group, msTimeout, rule);
-		HashMap<String, String> variablesMap = new HashMap<String, String>();
+			return runScript(scriptPath, group, rule);
+		HashMap<String, String> variablesMap = new HashMap<>();
 		int l = variables.length / 2;
 		for (int i = 0; i < l; i++)
 			variablesMap.put(variables[i * 2], variables[i * 2 + 1]);
-		return runScriptVariables(scriptPath, local, group, msTimeout, null, variablesMap);
+		return runScriptVariables(scriptPath, group, rule, variablesMap);
 	}
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, String group, Integer msTimeout) {
+	public Map<String, ScriptRunStatus> getRunsStatus() {
 		TreeMap<String, ScriptRunStatus> results = new TreeMap<String, ScriptRunStatus>();
 		for (ScriptSingleClient client : this) {
 			try {
-				results.putAll(client.getRunsStatus(true, group, msTimeout));
+				results.putAll(client.getRunsStatus());
 			} catch (WebApplicationException e) {
 				if (e.getResponse().getStatus() != 404)
 					throw e;
@@ -121,10 +120,10 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(String run_id, Boolean local, String group, Integer msTimeout) {
+	public String getRunOut(String run_id) {
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.getRunStatus(run_id, true, group, msTimeout);
+				return client.getRunOut(run_id);
 			} catch (WebApplicationException e) {
 				throw e;
 			}
@@ -133,10 +132,10 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 	}
 
 	@Override
-	public String getRunOut(String run_id, Boolean local, String group, Integer msTimeout) {
+	public String getRunErr(String run_id) {
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.getRunOut(run_id, true, group, msTimeout);
+				return client.getRunErr(run_id);
 			} catch (WebApplicationException e) {
 				throw e;
 			}
@@ -145,10 +144,10 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 	}
 
 	@Override
-	public String getRunErr(String run_id, Boolean local, String group, Integer msTimeout) {
+	public ScriptRunStatus getRunStatus(String run_id) {
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.getRunErr(run_id, true, group, msTimeout);
+				return client.getRunStatus(run_id);
 			} catch (WebApplicationException e) {
 				throw e;
 			}

@@ -46,28 +46,27 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 			};
 
 	@Override
-	public List<ScriptRunStatus> runScript(String scriptPath, Boolean local, String group, Integer msTimeout,
-			TargetRuleEnum rule) {
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_RUN, scriptPath).setParameters(local, group, msTimeout)
-				.setParameter("rule", rule);
+	public List<ScriptRunStatus> runScript(String scriptPath, String group, TargetRuleEnum rule) {
+		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_RUN, scriptPath).setParameter("group", group)
+				.setParameter("rule", rule == null ? null : rule.name());
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, ListRunStatusTypeRef, 200, 202);
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScriptVariables(String scriptPath, Boolean local, String group, Integer msTimeout,
-			TargetRuleEnum rule, Map<String, String> variables) {
+	public List<ScriptRunStatus> runScriptVariables(String scriptPath, String group, TargetRuleEnum rule,
+			Map<String, String> variables) {
 		if (variables == null)
-			return runScript(scriptPath, local, group, msTimeout, rule);
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_RUN, scriptPath).setParameters(local, group, msTimeout)
-				.setParameter("rule", rule);
+			return runScript(scriptPath, group, rule);
+		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_RUN, scriptPath).setParameter("group", group)
+				.setParameter("rule", rule == null ? null : rule.name());
 		Request request = Request.Post(uriBuilder.build());
 		return commonServiceRequest(request, variables, null, ListRunStatusTypeRef, 200, 202);
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(String run_id, Boolean local, String group, Integer msTimeout) {
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id).setParameters(local, group, msTimeout);
+	public ScriptRunStatus getRunStatus(String run_id) {
+		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, ScriptRunStatus.class, 200);
 	}
@@ -77,17 +76,16 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 			};
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus(Boolean local, String group, Integer msTimeout) {
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS).setParameters(local, group, msTimeout);
+	public Map<String, ScriptRunStatus> getRunsStatus() {
+		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, null, MapRunStatusTypeRef, 200);
 	}
 
 	@Override
-	public String getRunOut(String run_id, Boolean local, String group, Integer msTimeout) {
+	public String getRunOut(String run_id) {
 		try {
-			UBuilder uriBuilder =
-					new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/out").setParameters(local, group, msTimeout);
+			UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/out");
 			Request request = Request.Get(uriBuilder.build());
 			HttpResponse response = execute(request, null, null);
 			return HttpUtils.checkTextPlainEntity(response, 200);
@@ -99,10 +97,9 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	}
 
 	@Override
-	public String getRunErr(String run_id, Boolean local, String group, Integer msTimeout) {
+	public String getRunErr(String run_id) {
 		try {
-			UBuilder uriBuilder =
-					new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/err").setParameters(local, group, msTimeout);
+			UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_STATUS, run_id, "/err");
 			Request request = Request.Get(uriBuilder.build());
 			HttpResponse response = execute(request, null, null);
 			return HttpUtils.checkTextPlainEntity(response, 200);

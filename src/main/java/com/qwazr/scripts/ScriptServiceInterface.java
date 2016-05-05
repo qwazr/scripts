@@ -28,6 +28,7 @@ import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 @RolesAllowed(ScriptManager.SERVICE_NAME_SCRIPT)
 @Path("/scripts")
@@ -37,8 +38,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/run/{script_path : .+}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	List<ScriptRunStatus> runScript(@PathParam("script_path") String scriptPath, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout,
+	List<ScriptRunStatus> runScript(@PathParam("script_path") String scriptPath, @QueryParam("group") String group,
 			@QueryParam("rule") TargetRuleEnum rule);
 
 	@POST
@@ -46,48 +46,40 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	List<ScriptRunStatus> runScriptVariables(@PathParam("script_path") String scriptPath,
-			@QueryParam("local") Boolean local, @QueryParam("group") String group,
-			@QueryParam("timeout") Integer msTimeout, @QueryParam("rule") TargetRuleEnum rule,
-			Map<String, String> variables);
+			@QueryParam("group") String group, @QueryParam("rule") TargetRuleEnum rule, Map<String, String> variables);
 
 	@GET
 	@Path("/status")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Map<String, ScriptRunStatus> getRunsStatus(@QueryParam("local") Boolean local, @QueryParam("group") String group,
-			@QueryParam("timeout") Integer msTimeout);
+	Map<String, ScriptRunStatus> getRunsStatus();
 
 	@GET
 	@Path("/status/{run_id}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	ScriptRunStatus getRunStatus(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
+	ScriptRunStatus getRunStatus(@PathParam("run_id") String run_id);
 
 	@GET
 	@Path("/status/{run_id}/out")
 	@Produces(MediaType.TEXT_PLAIN)
-	String getRunOut(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
+	String getRunOut(@PathParam("run_id") String run_id);
 
 	@GET
 	@Path("/status/{run_id}/err")
 	@Produces(MediaType.TEXT_PLAIN)
-	String getRunErr(@PathParam("run_id") String run_id, @QueryParam("local") Boolean local,
-			@QueryParam("group") String group, @QueryParam("timeout") Integer msTimeout);
+	String getRunErr(@PathParam("run_id") String run_id);
 
-	static ScriptServiceInterface getClient(Boolean local, String group, Integer msTimeout) throws URISyntaxException {
+	static ScriptServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
 		if (local != null && local)
-			return new ScriptSingleServiceImpl();
-		if (!ClusterManager.INSTANCE.isCluster())
-			return new ScriptSingleServiceImpl();
-		String[] nodes = ClusterManager.INSTANCE.getClusterClient()
-				.getActiveNodesByService(ScriptManager.SERVICE_NAME_SCRIPT, group);
+			return new ScriptServiceImpl();
+		TreeSet<String> nodes =
+				ClusterManager.INSTANCE.getNodesByGroupByService(ScriptManager.SERVICE_NAME_SCRIPT, group);
 		if (nodes == null)
 			throw new WebApplicationException("The script service is not available");
-		if (nodes.length == 0)
+		if (nodes.size() == 0)
 			throw new WebApplicationException("No available script node for the group: " + group,
 					Response.Status.EXPECTATION_FAILED);
-		if (nodes.length == 1)
-			return new ScriptSingleClient(new RemoteService(nodes[0]));
+		if (nodes.size() == 1)
+			return new ScriptSingleClient(new RemoteService(nodes.first()));
 		return new ScriptMultiClient(ClusterManager.INSTANCE.executor, RemoteService.build(nodes));
 	}
 

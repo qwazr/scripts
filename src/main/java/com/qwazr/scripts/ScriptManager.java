@@ -15,7 +15,6 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.LockUtils.ReadWriteLock;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerException;
@@ -47,7 +46,7 @@ public class ScriptManager {
 			throw new IOException("Already loaded");
 		try {
 			INSTANCE = new ScriptManager(executorService, directory);
-			return ClusterManager.INSTANCE.isCluster() ? ScriptClusterServiceImpl.class : ScriptSingleServiceImpl.class;
+			return ScriptServiceImpl.class;
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
@@ -71,7 +70,7 @@ public class ScriptManager {
 		// Load Nashorn
 		ScriptEngineManager manager = new ScriptEngineManager();
 		scriptEngine = manager.getEngineByName("nashorn");
-		runsMap = new HashMap<String, RunThreadAbstract>();
+		runsMap = new HashMap<>();
 		this.executorService = executorService;
 	}
 
