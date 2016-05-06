@@ -16,8 +16,6 @@
 package com.qwazr.scripts;
 
 import com.qwazr.library.LibraryManager;
-import com.qwazr.semaphores.SemaphoresManager;
-import com.qwazr.semaphores.SemaphoresServiceInterface;
 import com.qwazr.utils.IOUtils;
 
 import javax.script.*;
@@ -25,7 +23,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.StringWriter;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -68,8 +65,6 @@ class JsRunThread extends RunThreadAbstract {
 			scriptEngine.eval(fileReader, scriptContext);
 		} finally {
 			IOUtils.close(fileReader);
-			for (String semaphore : semaphores)
-				SemaphoresManager.getInstance().unregister(semaphore, uuid);
 		}
 	}
 
@@ -82,33 +77,10 @@ class JsRunThread extends RunThreadAbstract {
 
 		private GlobalBindings() {
 			this.put("console", new ScriptConsole());
-			this.put("semaphore", new ScriptSemaphore());
 		}
 
 		public void sleep(int msTimeout) throws InterruptedException {
 			Thread.sleep(msTimeout);
-		}
-	}
-
-	public class ScriptSemaphore {
-
-		public Set<String> owners(String semaphore_id, Boolean local, String group, Integer msTimeout)
-				throws URISyntaxException {
-			return SemaphoresServiceInterface.getClient().getSemaphoreOwners(semaphore_id, local, group, msTimeout);
-		}
-
-		public void register(String semaphore_id) {
-			synchronized (semaphores) {
-				SemaphoresManager.getInstance().register(semaphore_id, uuid);
-				semaphores.add(semaphore_id);
-			}
-		}
-
-		public void unregister(String semaphore_id) {
-			synchronized (semaphores) {
-				SemaphoresManager.getInstance().unregister(semaphore_id, uuid);
-				semaphores.remove(semaphore_id);
-			}
 		}
 	}
 }

@@ -39,10 +39,6 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-semaphores</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
             <artifactId>qwazr-utils</artifactId>
         </dependency>
         <dependency>
