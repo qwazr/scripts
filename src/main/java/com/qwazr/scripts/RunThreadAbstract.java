@@ -79,7 +79,8 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 
 	@Override
 	final public ScriptRunStatus getStatus() {
-		return new ScriptRunStatus(ClusterManager.INSTANCE.myAddress, scriptName, uuid, state, startTime, endTime,
+		return new ScriptRunStatus(ClusterManager.INSTANCE.me.httpAddressKey, scriptName, uuid, state, startTime,
+				endTime,
 				initialVariables == null ? null : initialVariables.keySet(), exception);
 	}
 
