@@ -17,6 +17,7 @@ package com.qwazr.scripts;
 
 import com.qwazr.utils.LockUtils.ReadWriteLock;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -40,13 +41,14 @@ public class ScriptManager {
 
 	static ScriptManager INSTANCE = null;
 
-	public synchronized static Class<? extends ScriptServiceInterface> load(ExecutorService executorService,
-			File directory) throws IOException {
+	public synchronized static void load(final ServerBuilder serverBuilder) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new ScriptManager(executorService, directory);
-			return ScriptServiceImpl.class;
+			INSTANCE = new ScriptManager(serverBuilder.getExecutorService(),
+					serverBuilder.getServerConfiguration().dataDirectory);
+			if (serverBuilder != null)
+				serverBuilder.registerWebService(ScriptServiceImpl.class);
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}

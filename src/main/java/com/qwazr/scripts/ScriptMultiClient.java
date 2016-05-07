@@ -24,14 +24,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 
 public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> implements ScriptServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(ScriptMultiClient.class);
 
-	public ScriptMultiClient(ExecutorService executor, RemoteService... remotes) {
-		super(executor, new ScriptSingleClient[remotes.length], remotes);
+	public ScriptMultiClient(RemoteService... remotes) {
+		super(new ScriptSingleClient[remotes.length], remotes);
 	}
 
 	@Override

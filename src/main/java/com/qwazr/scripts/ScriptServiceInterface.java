@@ -80,7 +80,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 					Response.Status.EXPECTATION_FAILED);
 		if (nodes.size() == 1)
 			return new ScriptSingleClient(new RemoteService(nodes.first()));
-		return new ScriptMultiClient(ClusterManager.INSTANCE.executor, RemoteService.build(nodes));
+		return new ScriptMultiClient(RemoteService.build(nodes));
 	}
 
 }
