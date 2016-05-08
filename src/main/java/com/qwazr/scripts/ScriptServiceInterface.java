@@ -72,7 +72,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 		if (local != null && local)
 			return new ScriptServiceImpl();
 		TreeSet<String> nodes =
-				ClusterManager.INSTANCE.getNodesByGroupByService(ScriptManager.SERVICE_NAME_SCRIPT, group);
+				ClusterManager.INSTANCE.getNodesByGroupByService(group, ScriptManager.SERVICE_NAME_SCRIPT);
 		if (nodes == null)
 			throw new WebApplicationException("The script service is not available");
 		if (nodes.size() == 0)
