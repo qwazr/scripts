@@ -97,14 +97,14 @@ public class ScriptManager {
 		}
 	}
 
-	private RunThreadAbstract getNewScriptRunThread(String scriptPath, Map<String, ?> objects)
+	private RunThreadAbstract getNewScriptRunThread(final String scriptPath, final Map<String, ?> objects)
 			throws ServerException, IOException, ClassNotFoundException {
 		final RunThreadAbstract scriptRunThread;
 		if (scriptPath.endsWith(".js"))
 			scriptRunThread = new JsRunThread(scriptEngine, getScriptFile(scriptPath), objects);
 		else
 			scriptRunThread = new JavaRunThread(scriptPath, objects);
-		addScriptRunThread(scriptPath, scriptRunThread);
+		addScriptRunThread(scriptRunThread);
 		return scriptRunThread;
 	}
 
@@ -118,7 +118,7 @@ public class ScriptManager {
 		return scriptRunThread;
 	}
 
-	public ScriptRunStatus runAsync(String scriptPath, Map<String, ?> objects)
+	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects)
 			throws ServerException, IOException, ClassNotFoundException {
 		if (logger.isInfoEnabled())
 			logger.info("Run async: " + scriptPath);
@@ -128,53 +128,36 @@ public class ScriptManager {
 		return scriptRunThread.getStatus();
 	}
 
-	private void addScriptRunThread(String scriptPath, RunThreadAbstract scriptRunThread) {
+	private void addScriptRunThread(final RunThreadAbstract scriptRunThread) {
 		if (scriptRunThread == null)
 			return;
-		runsMapLock.w.lock();
-		try {
-			runsMap.put(scriptRunThread.getUUID(), scriptRunThread);
-		} finally {
-			runsMapLock.w.unlock();
-		}
+		runsMapLock.write(() -> runsMap.put(scriptRunThread.getUUID(), scriptRunThread));
 	}
 
 	private void expireScriptRunThread() {
-		runsMapLock.w.lock();
-		try {
-			List<String> uuidsToDelete = new ArrayList<String>();
-			long currentTime = System.currentTimeMillis();
-			for (RunThreadAbstract scriptRunThread : runsMap.values())
+		runsMapLock.write(() -> {
+			final List<String> uuidsToDelete = new ArrayList<>();
+			final long currentTime = System.currentTimeMillis();
+			runsMap.forEach((s, scriptRunThread) -> {
 				if (scriptRunThread.hasExpired(currentTime))
 					uuidsToDelete.add(scriptRunThread.getUUID());
-			for (String uuid : uuidsToDelete)
-				runsMap.remove(uuid);
+			});
+			uuidsToDelete.forEach(runsMap::remove);
 			if (logger.isInfoEnabled())
 				logger.info("Expire " + uuidsToDelete.size() + " jobs");
-		} finally {
-			runsMapLock.w.unlock();
-		}
+		});
 	}
 
 	Map<String, ScriptRunStatus> getRunsStatus() {
-		runsMapLock.r.lock();
-		try {
-			LinkedHashMap<String, ScriptRunStatus> runStatusMap = new LinkedHashMap<String, ScriptRunStatus>();
-			for (Map.Entry<String, RunThreadAbstract> entry : runsMap.entrySet())
-				runStatusMap.put(entry.getKey(), entry.getValue().getStatus());
+		return runsMapLock.read(() -> {
+			final LinkedHashMap<String, ScriptRunStatus> runStatusMap = new LinkedHashMap<>();
+			runsMap.forEach((key, runThreadAbstract) -> runStatusMap.put(key, runThreadAbstract.getStatus()));
 			return runStatusMap;
-		} finally {
-			runsMapLock.r.unlock();
-		}
+		});
 	}
 
-	RunThreadAbstract getRunThread(String uuid) {
-		runsMapLock.r.lock();
-		try {
-			return runsMap.get(uuid);
-		} finally {
-			runsMapLock.r.unlock();
-		}
+	RunThreadAbstract getRunThread(final String uuid) {
+		return runsMapLock.read(() -> runsMap.get(uuid));
 	}
 
 }
