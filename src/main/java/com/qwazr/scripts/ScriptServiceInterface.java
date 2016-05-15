@@ -28,7 +28,7 @@ import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.SortedSet;
 
 @RolesAllowed(ScriptManager.SERVICE_NAME_SCRIPT)
 @Path("/scripts")
@@ -71,7 +71,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	static ScriptServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
 		if (local != null && local)
 			return new ScriptServiceImpl();
-		TreeSet<String> nodes =
+		SortedSet<String> nodes =
 				ClusterManager.INSTANCE.getNodesByGroupByService(group, ScriptManager.SERVICE_NAME_SCRIPT);
 		if (nodes == null)
 			throw new WebApplicationException("The script service is not available");
