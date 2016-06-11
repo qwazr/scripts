@@ -17,6 +17,8 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.utils.server.ServerException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response.Status;
 import java.util.Arrays;
@@ -24,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ScriptServiceImpl implements ScriptServiceInterface {
+
+	private static final Logger logger = LoggerFactory.getLogger(ScriptServiceImpl.class);
 
 	@Override
 	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
@@ -36,7 +40,7 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 		try {
 			return Arrays.asList(ScriptManager.INSTANCE.runAsync(scriptPath, variables));
 		} catch (Exception e) {
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -52,7 +56,7 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 		try {
 			return getRunThread(run_id).getStatus();
 		} catch (ServerException e) {
-			throw e.getTextException();
+			throw ServerException.getTextException(logger, e);
 		}
 	}
 
@@ -61,7 +65,7 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 		try {
 			return getRunThread(run_id).getOut();
 		} catch (ServerException e) {
-			throw e.getTextException();
+			throw ServerException.getTextException(logger, e);
 		}
 	}
 
@@ -70,7 +74,7 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 		try {
 			return getRunThread(run_id).getErr();
 		} catch (ServerException e) {
-			throw e.getTextException();
+			throw ServerException.getTextException(logger, e);
 		}
 	}
 
