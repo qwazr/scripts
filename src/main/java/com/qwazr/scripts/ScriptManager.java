@@ -66,9 +66,11 @@ public class ScriptManager {
 	private final HashMap<String, RunThreadAbstract> runsMap;
 
 	final ExecutorService executorService;
+	final File dataDir;
 
 	private ScriptManager(ExecutorService executorService, File rootDirectory) throws IOException, URISyntaxException {
 
+		dataDir = rootDirectory;
 		// Load Nashorn
 		ScriptEngineManager manager = new ScriptEngineManager();
 		scriptEngine = manager.getEngineByName("nashorn");
@@ -79,7 +81,7 @@ public class ScriptManager {
 	private File getScriptFile(String scriptPath) throws ServerException {
 		if (StringUtils.isEmpty(scriptPath))
 			throw new ServerException(Status.NOT_ACCEPTABLE, "No path given");
-		final File scriptFile = new File(scriptPath);
+		final File scriptFile = new File(dataDir, scriptPath);
 		if (!scriptFile.exists())
 			throw new ServerException(Status.NOT_FOUND, "Script not found: " + scriptPath);
 		if (!scriptFile.isFile())
