@@ -17,7 +17,9 @@ package com.qwazr.scripts;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.library.LibraryManager;
+import com.qwazr.utils.server.ServerException;
 
+import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -27,10 +29,13 @@ public class JavaRunThread extends RunThreadAbstract {
 	private final Map<String, Object> variables;
 	private final Class<?> scriptClass;
 
-	JavaRunThread(String className, Map<String, ?> initialVariables) throws ClassNotFoundException {
+	JavaRunThread(String className, Map<String, ?> initialVariables) {
 		super(className, initialVariables);
-		scriptClass = ClassLoaderManager.findClass(className);
-		Objects.requireNonNull(scriptClass, "Class not found: " + className);
+		try {
+			scriptClass = ClassLoaderManager.findClass(className);
+		} catch (ClassNotFoundException e) {
+			throw new ServerException(Response.Status.NOT_FOUND, "Class not found: " + className);
+		}
 		variables = new HashMap<>();
 		if (initialVariables != null)
 			variables.putAll(initialVariables);
