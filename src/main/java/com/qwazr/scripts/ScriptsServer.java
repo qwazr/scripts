@@ -25,7 +25,7 @@ import java.io.IOException;
 public class ScriptsServer {
 
 	public static GenericServer start()
-			throws IOException, ServletException, IllegalAccessException, InstantiationException {
+			throws Exception {
 		final ServerBuilder builder = new ServerBuilder();
 		ClusterManager.load(builder, null);
 		ScriptManager.load(builder);
@@ -33,7 +33,7 @@ public class ScriptsServer {
 	}
 
 	public static void main(String[] args)
-			throws IOException, ServletException, InstantiationException, IllegalAccessException {
+			throws Exception {
 		start();
 	}
 
