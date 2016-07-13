@@ -18,12 +18,12 @@ package com.qwazr.scripts;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.utils.UBuilder;
+import com.qwazr.utils.http.HttpRequest;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import com.qwazr.utils.server.RemoteService;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
+import org.apache.http.client.methods.CloseableHttpResponse;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
@@ -47,30 +47,30 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 			};
 
 	@Override
-	public List<ScriptRunStatus> runScript(String scriptPath, String group, TargetRuleEnum rule) {
+	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath).setParameter("group", group)
 						.setParameter("rule", rule == null ? null : rule.name());
-		Request request = Request.Get(uriBuilder.buildNoEx());
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, ListRunStatusTypeRef, 200, 202);
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScriptVariables(String scriptPath, String group, TargetRuleEnum rule,
-			Map<String, String> variables) {
+	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group,
+			final TargetRuleEnum rule, final Map<String, String> variables) {
 		if (variables == null)
 			return runScript(scriptPath, group, rule);
 		final UBuilder uriBuilder =
 				RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath).setParameter("group", group)
 						.setParameter("rule", rule == null ? null : rule.name());
-		Request request = Request.Post(uriBuilder.buildNoEx());
+		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return commonServiceRequest(request, variables, null, ListRunStatusTypeRef, 200, 202);
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(String run_id) {
+	public ScriptRunStatus getRunStatus(final String run_id) {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS, run_id);
-		Request request = Request.Get(uriBuilder.buildNoEx());
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, ScriptRunStatus.class, 200);
 	}
 
@@ -81,16 +81,16 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
 		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS);
-		Request request = Request.Get(uriBuilder.buildNoEx());
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, MapRunStatusTypeRef, 200);
 	}
 
 	@Override
-	public String getRunOut(String run_id) {
-		try {
-			final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS, run_id, "/out");
-			Request request = Request.Get(uriBuilder.buildNoEx());
-			HttpResponse response = execute(request, null, null);
+	public String getRunOut(final String run_id) {
+
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS, run_id, "/out");
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
+		try (final CloseableHttpResponse response = execute(request, null, null)) {
 			return HttpUtils.checkTextPlainEntity(response, 200);
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
@@ -100,11 +100,10 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	}
 
 	@Override
-	public String getRunErr(String run_id) {
-		try {
-			final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS, run_id, "/err");
-			Request request = Request.Get(uriBuilder.buildNoEx());
-			HttpResponse response = execute(request, null, null);
+	public String getRunErr(final String run_id) {
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS, run_id, "/err");
+		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
+		try (final CloseableHttpResponse response = execute(request, null, null)) {
 			return HttpUtils.checkTextPlainEntity(response, 200);
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
