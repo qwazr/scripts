@@ -16,8 +16,12 @@
 package com.qwazr.scripts.test;
 
 import com.google.common.io.Files;
-import com.qwazr.scripts.*;
-import com.qwazr.utils.server.WebAppExceptionHolder;
+import com.qwazr.scripts.ScriptManager;
+import com.qwazr.scripts.ScriptRunStatus;
+import com.qwazr.scripts.ScriptServiceInterface;
+import com.qwazr.scripts.ScriptsServer;
+import com.qwazr.utils.http.HttpClients;
+import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -40,7 +44,7 @@ public class FullTest {
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
-		ScriptsServer.main(new String[]{});
+		ScriptsServer.main(new String[] {});
 		Assert.assertNotNull(ScriptManager.getInstance());
 	}
 
@@ -101,5 +105,13 @@ public class FullTest {
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(404, e.getResponse().getStatus());
 		}
+	}
+
+	@Test
+	public void test999httpClient() {
+		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
+		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
+		Assert.assertEquals(0, stats.getPending());
+		Assert.assertTrue(stats.getAvailable() > 0);
 	}
 }
