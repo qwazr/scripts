@@ -16,11 +16,15 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.utils.CharsetUtils;
+import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -61,18 +65,20 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 	}
 
 	@Override
-	public String getRunOut(final String run_id) {
+	public StreamingOutput getRunOut(final String run_id) {
 		try {
-			return getRunThread(run_id).getOut();
+			return AbstractStreamingOutput.with(new StringReader(getRunThread(run_id).getOut()),
+					CharsetUtils.CharsetUTF8);
 		} catch (ServerException e) {
 			throw ServerException.getTextException(logger, e);
 		}
 	}
 
 	@Override
-	public String getRunErr(final String run_id) {
+	public StreamingOutput getRunErr(final String run_id) {
 		try {
-			return getRunThread(run_id).getErr();
+			return AbstractStreamingOutput.with(new StringReader(getRunThread(run_id).getErr()),
+					CharsetUtils.CharsetUTF8);
 		} catch (ServerException e) {
 			throw ServerException.getTextException(logger, e);
 		}

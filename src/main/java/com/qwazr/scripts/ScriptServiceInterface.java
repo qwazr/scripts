@@ -25,6 +25,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
@@ -61,12 +62,12 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/status/{run_id}/out")
 	@Produces(MediaType.TEXT_PLAIN)
-	String getRunOut(@PathParam("run_id") String run_id);
+	StreamingOutput getRunOut(@PathParam("run_id") String run_id);
 
 	@GET
 	@Path("/status/{run_id}/err")
 	@Produces(MediaType.TEXT_PLAIN)
-	String getRunErr(@PathParam("run_id") String run_id);
+	StreamingOutput getRunErr(@PathParam("run_id") String run_id);
 
 	static ScriptServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
 		if (local != null && local)

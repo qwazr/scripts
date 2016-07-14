@@ -16,6 +16,7 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.WebAppExceptionHolder;
@@ -106,7 +107,7 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
-		TreeMap<String, ScriptRunStatus> results = new TreeMap<String, ScriptRunStatus>();
+		TreeMap<String, ScriptRunStatus> results = new TreeMap<>();
 		for (ScriptSingleClient client : this) {
 			try {
 				results.putAll(client.getRunsStatus());
@@ -119,7 +120,7 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 	}
 
 	@Override
-	public String getRunOut(String run_id) {
+	public AbstractStreamingOutput getRunOut(final String run_id) {
 		for (ScriptSingleClient client : this) {
 			try {
 				return client.getRunOut(run_id);
@@ -131,7 +132,7 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 	}
 
 	@Override
-	public String getRunErr(String run_id) {
+	public AbstractStreamingOutput getRunErr(final String run_id) {
 		for (ScriptSingleClient client : this) {
 			try {
 				return client.getRunErr(run_id);
