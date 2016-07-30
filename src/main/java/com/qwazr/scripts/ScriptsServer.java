@@ -18,11 +18,12 @@ package com.qwazr.scripts;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
+import com.qwazr.utils.server.ServerConfiguration;
 
 public class ScriptsServer {
 
 	public static GenericServer start() throws Exception {
-		final ServerBuilder builder = new ServerBuilder();
+		final ServerBuilder builder = new ServerBuilder(new ServerConfiguration());
 		ClusterManager.load(builder, null, null);
 		ScriptManager.load(builder);
 		return builder.build().start(true);
