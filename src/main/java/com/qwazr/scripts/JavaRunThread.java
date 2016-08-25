@@ -43,9 +43,8 @@ public class JavaRunThread extends RunThreadAbstract {
 
 	@Override
 	protected void runner() throws Exception {
-		Object script = scriptClass.newInstance();
 		Objects.requireNonNull("Cannot create instance of " + scriptClass);
-		LibraryManager.inject(script);
+		final Object script = LibraryManager.newInstance(scriptClass);
 		if (script instanceof ScriptInterface)
 			((ScriptInterface) script).run(variables);
 		else if (script instanceof Runnable)
