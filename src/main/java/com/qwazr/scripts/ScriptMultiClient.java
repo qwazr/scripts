@@ -16,10 +16,10 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
-import com.qwazr.utils.server.WebAppExceptionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 		return new ScriptSingleClient(remote);
 	}
 
-	private List<ScriptRunStatus> runScriptRuleAll(final WebAppExceptionHolder exceptionHolder, final String scriptPath,
+	private List<ScriptRunStatus> runScriptRuleAll(final ExceptionUtils.Holder exceptionHolder, final String scriptPath,
 			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
 		final List<ScriptRunStatus> statusList = new ArrayList<>(size());
 		for (ScriptSingleClient client : this) {
@@ -52,12 +52,11 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 				exceptionHolder.switchAndWarn(e);
 			}
 		}
-		if (exceptionHolder.getException() != null)
-			throw exceptionHolder.getException();
+		exceptionHolder.thrownIfAny();
 		return statusList;
 	}
 
-	private List<ScriptRunStatus> runScriptRuleOne(final WebAppExceptionHolder exceptionHolder, final String scriptPath,
+	private List<ScriptRunStatus> runScriptRuleOne(final ExceptionUtils.Holder exceptionHolder, final String scriptPath,
 			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
 		for (ScriptSingleClient client : this) {
 			try {
@@ -69,8 +68,7 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 				exceptionHolder.switchAndWarn(e);
 			}
 		}
-		if (exceptionHolder.getException() != null)
-			throw exceptionHolder.getException();
+		exceptionHolder.thrownIfAny();
 		return Collections.emptyList();
 	}
 
@@ -82,15 +80,15 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 	@Override
 	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group, TargetRuleEnum rule,
 			Map<String, String> variables) {
-		final WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
+		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(logger);
 		if (rule == null)
 			rule = TargetRuleEnum.one;
 		switch (rule) {
-		case all:
-			return runScriptRuleAll(exceptionHolder, scriptPath, group, rule, variables);
-		default:
-		case one:
-			return runScriptRuleOne(exceptionHolder, scriptPath, group, rule, variables);
+			case all:
+				return runScriptRuleAll(exceptionHolder, scriptPath, group, rule, variables);
+			default:
+			case one:
+				return runScriptRuleOne(exceptionHolder, scriptPath, group, rule, variables);
 		}
 	}
 
