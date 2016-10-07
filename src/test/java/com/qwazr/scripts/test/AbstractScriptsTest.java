@@ -16,10 +16,7 @@
 package com.qwazr.scripts.test;
 
 import com.google.common.io.Files;
-import com.qwazr.scripts.ScriptManager;
-import com.qwazr.scripts.ScriptRunStatus;
-import com.qwazr.scripts.ScriptServiceInterface;
-import com.qwazr.scripts.ScriptsServer;
+import com.qwazr.scripts.*;
 import com.qwazr.utils.http.HttpClients;
 import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
@@ -28,7 +25,6 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -53,25 +49,18 @@ public abstract class AbstractScriptsTest {
 		serverStarted = true;
 	}
 
-	protected abstract ScriptServiceInterface getClient() throws URISyntaxException;
+	private static ScriptServiceInterface client;
+
+	protected abstract ScriptServiceInterface getClient() throws InterruptedException, URISyntaxException;
 
 	@Test
 	public void test005getClient() throws URISyntaxException, InterruptedException {
-		for (int i = 0; i < 10; i++) {
-			try {
-				Assert.assertNotNull(getClient());
-				return;
-			} catch (WebApplicationException e) {
-				Assert.assertNotEquals(Response.Status.EXPECTATION_FAILED, e.getResponse().getStatus());
-			}
-			Thread.sleep(2000);
-		}
-		Assert.fail("Timeout while getting client");
+		this.client = getClient();
 	}
 
 	@Test
 	public void test100list() throws URISyntaxException {
-		Map<String, ScriptRunStatus> statusMap = getClient().getRunsStatus();
+		Map<String, ScriptRunStatus> statusMap = client.getRunsStatus();
 		Assert.assertNotNull(statusMap);
 	}
 
@@ -79,7 +68,7 @@ public abstract class AbstractScriptsTest {
 	public void test200start() throws URISyntaxException, InterruptedException {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTest", "ScriptTest");
-		List<ScriptRunStatus> list = getClient().runScriptVariables(TaskScript.class.getName(), null, null, variables);
+		List<ScriptRunStatus> list = client.runScriptVariables(TaskScript.class.getName(), null, null, variables);
 		Assert.assertNotNull(list);
 		Assert.assertEquals(1, list.size());
 		for (int i = 0; i < 10; i++) {
@@ -93,7 +82,7 @@ public abstract class AbstractScriptsTest {
 	@Test
 	public void test300startClassError() throws InterruptedException, URISyntaxException {
 		try {
-			getClient().runScriptVariables("dummy", null, null, null);
+			client.runScriptVariables("dummy", null, null, null);
 			Assert.fail("Exception not thrown");
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(404, e.getResponse().getStatus());
@@ -103,7 +92,7 @@ public abstract class AbstractScriptsTest {
 	@Test
 	public void test300startJSError() throws InterruptedException, URISyntaxException {
 		try {
-			getClient().runScriptVariables("dummy.js", null, null, null);
+			client.runScriptVariables("dummy.js", null, null, null);
 			Assert.fail("Exception not thrown");
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(404, e.getResponse().getStatus());

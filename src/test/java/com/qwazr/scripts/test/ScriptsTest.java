@@ -15,10 +15,15 @@
  */
 package com.qwazr.scripts.test;
 
+import com.qwazr.scripts.ScriptServiceImpl;
 import com.qwazr.scripts.ScriptServiceInterface;
+import com.qwazr.scripts.ScriptSingleClient;
+import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 
 @RunWith(Suite.class)
@@ -28,16 +33,31 @@ public class ScriptsTest {
 	public static class LocalTest extends AbstractScriptsTest {
 
 		@Override
-		protected ScriptServiceInterface getClient() throws URISyntaxException {
-			return ScriptServiceInterface.getClient(true, null);
+		protected ScriptServiceInterface getClient() throws URISyntaxException, InterruptedException {
+			ScriptServiceInterface client = ScriptServiceInterface.getClient(true, null);
+			Assert.assertNotNull(client);
+			Assert.assertTrue(client instanceof ScriptServiceImpl);
+			return client;
 		}
 	}
 
 	public static class SingleClientTest extends AbstractScriptsTest {
 
 		@Override
-		protected ScriptServiceInterface getClient() throws URISyntaxException {
-			return ScriptServiceInterface.getClient(false, null);
+		protected ScriptServiceInterface getClient() throws InterruptedException, URISyntaxException {
+			for (int i = 0; i < 10; i++) {
+				try {
+					ScriptServiceInterface client = ScriptServiceInterface.getClient(false, null);
+					Assert.assertNotNull(client);
+					Assert.assertTrue(client instanceof ScriptSingleClient);
+					return client;
+				} catch (WebApplicationException e) {
+					Assert.assertNotEquals(Response.Status.EXPECTATION_FAILED, e.getResponse().getStatus());
+				}
+				Thread.sleep(2000);
+			}
+			Assert.fail("Timeout while getting client");
+			return null;
 		}
 	}
 
