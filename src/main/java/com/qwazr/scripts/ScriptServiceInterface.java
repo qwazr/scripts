@@ -69,6 +69,14 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@Produces(MediaType.TEXT_PLAIN)
 	StreamingOutput getRunErr(@PathParam("run_id") String run_id);
 
+	/**
+	 * Return a script service client
+	 *
+	 * @param local set true to require a local client. False to avoid a local client. Null to let the method decide.
+	 * @param group an optional group
+	 * @return a script service client
+	 * @throws URISyntaxException
+	 */
 	static ScriptServiceInterface getClient(final Boolean local, final String group) throws URISyntaxException {
 		if (local != null && local)
 			return ScriptServiceImpl.INSTANCE;
@@ -81,7 +89,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 					Response.Status.EXPECTATION_FAILED);
 		if (nodes.size() == 1) {
 			final String node = nodes.first();
-			if (ClusterManager.INSTANCE.me.httpAddressKey.equals(node))
+			if (local == null && ClusterManager.INSTANCE.me.httpAddressKey.equals(node))
 				return ScriptServiceImpl.INSTANCE;
 			return new ScriptSingleClient(new RemoteService(node));
 		}

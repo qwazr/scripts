@@ -36,26 +36,30 @@ import java.util.List;
 import java.util.Map;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class FullTest {
+public abstract class AbstractScriptsTest {
+
+	public static boolean serverStarted = false;
 
 	@Test
 	public void test000startServer() throws Exception {
+		if (serverStarted)
+			return;
 		final File dataDir = Files.createTempDir();
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
 		ScriptsServer.main(new String[] {});
 		Assert.assertNotNull(ScriptManager.getInstance());
+		serverStarted = true;
 	}
 
-	private static ScriptServiceInterface SERVICE = null;
+	protected abstract ScriptServiceInterface getClient() throws URISyntaxException;
 
 	@Test
 	public void test005getClient() throws URISyntaxException, InterruptedException {
 		for (int i = 0; i < 10; i++) {
 			try {
-				SERVICE = ScriptServiceInterface.getClient(false, null);
-				Assert.assertNotNull(SERVICE);
+				Assert.assertNotNull(getClient());
 				return;
 			} catch (WebApplicationException e) {
 				Assert.assertNotEquals(Response.Status.EXPECTATION_FAILED, e.getResponse().getStatus());
@@ -66,17 +70,16 @@ public class FullTest {
 	}
 
 	@Test
-	public void test100list() {
-		Map<String, ScriptRunStatus> statusMap = SERVICE.getRunsStatus();
+	public void test100list() throws URISyntaxException {
+		Map<String, ScriptRunStatus> statusMap = getClient().getRunsStatus();
 		Assert.assertNotNull(statusMap);
-		Assert.assertTrue(statusMap.isEmpty());
 	}
 
 	@Test
-	public void test200start() throws InterruptedException {
+	public void test200start() throws URISyntaxException, InterruptedException {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTest", "ScriptTest");
-		List<ScriptRunStatus> list = SERVICE.runScriptVariables(TaskScript.class.getName(), null, null, variables);
+		List<ScriptRunStatus> list = getClient().runScriptVariables(TaskScript.class.getName(), null, null, variables);
 		Assert.assertNotNull(list);
 		Assert.assertEquals(1, list.size());
 		for (int i = 0; i < 10; i++) {
@@ -88,9 +91,9 @@ public class FullTest {
 	}
 
 	@Test
-	public void test300startClassError() throws InterruptedException {
+	public void test300startClassError() throws InterruptedException, URISyntaxException {
 		try {
-			List<ScriptRunStatus> list = SERVICE.runScriptVariables("dummy", null, null, null);
+			getClient().runScriptVariables("dummy", null, null, null);
 			Assert.fail("Exception not thrown");
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(404, e.getResponse().getStatus());
@@ -98,9 +101,9 @@ public class FullTest {
 	}
 
 	@Test
-	public void test300startJSError() throws InterruptedException {
+	public void test300startJSError() throws InterruptedException, URISyntaxException {
 		try {
-			List<ScriptRunStatus> list = SERVICE.runScriptVariables("dummy.js", null, null, null);
+			getClient().runScriptVariables("dummy.js", null, null, null);
 			Assert.fail("Exception not thrown");
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(404, e.getResponse().getStatus());
@@ -112,6 +115,6 @@ public class FullTest {
 		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
 		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
 		Assert.assertEquals(0, stats.getPending());
-		Assert.assertTrue(stats.getAvailable() > 0);
+		Assert.assertTrue(stats.getAvailable() >= 0);
 	}
 }
