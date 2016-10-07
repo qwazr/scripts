@@ -33,6 +33,8 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(ScriptServiceImpl.class);
 
+	public static final ScriptServiceInterface INSTANCE = new ScriptServiceImpl();
+
 	@Override
 	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
 		return runScriptVariables(scriptPath, group, rule, null);

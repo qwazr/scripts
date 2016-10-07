@@ -69,18 +69,22 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@Produces(MediaType.TEXT_PLAIN)
 	StreamingOutput getRunErr(@PathParam("run_id") String run_id);
 
-	static ScriptServiceInterface getClient(Boolean local, String group) throws URISyntaxException {
+	static ScriptServiceInterface getClient(final Boolean local, final String group) throws URISyntaxException {
 		if (local != null && local)
-			return new ScriptServiceImpl();
-		SortedSet<String> nodes =
+			return ScriptServiceImpl.INSTANCE;
+		final SortedSet<String> nodes =
 				ClusterManager.INSTANCE.getNodesByGroupByService(group, ScriptManager.SERVICE_NAME_SCRIPT);
 		if (nodes == null)
 			throw new WebApplicationException("The script service is not available");
 		if (nodes.size() == 0)
 			throw new WebApplicationException("No available script node for the group: " + group,
 					Response.Status.EXPECTATION_FAILED);
-		if (nodes.size() == 1)
-			return new ScriptSingleClient(new RemoteService(nodes.first()));
+		if (nodes.size() == 1) {
+			final String node = nodes.first();
+			if (ClusterManager.INSTANCE.me.httpAddressKey.equals(node))
+				return ScriptServiceImpl.INSTANCE;
+			return new ScriptSingleClient(new RemoteService(node));
+		}
 		return new ScriptMultiClient(RemoteService.build(nodes));
 	}
 
