@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
-import java.io.FileReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Map;
@@ -79,9 +78,8 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 
 	@Override
 	final public ScriptRunStatus getStatus() {
-		return new ScriptRunStatus(ClusterManager.INSTANCE.me.httpAddressKey, scriptName, uuid, state, startTime,
-				endTime,
-				initialVariables == null ? null : initialVariables.keySet(), exception);
+		return new ScriptRunStatus(ClusterManager.INSTANCE.getHttpAddressKey(), scriptName, uuid, state, startTime,
+				endTime, initialVariables == null ? null : initialVariables.keySet(), exception);
 	}
 
 	@Override
@@ -106,7 +104,6 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 		logger.info("Execute: " + scriptName);
 		state = ScriptRunStatus.ScriptState.running;
 		startTime = System.currentTimeMillis();
-		FileReader fileReader = null;
 		try {
 			runner();
 			state = ScriptRunStatus.ScriptState.terminated;

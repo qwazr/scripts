@@ -89,7 +89,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 					Response.Status.EXPECTATION_FAILED);
 		if (nodes.size() == 1) {
 			final String node = nodes.first();
-			if (local == null && ClusterManager.INSTANCE.me.httpAddressKey.equals(node))
+			if (local == null && ClusterManager.INSTANCE.getHttpAddressKey().equals(node))
 				return ScriptServiceImpl.INSTANCE;
 			return new ScriptSingleClient(new RemoteService(node));
 		}
