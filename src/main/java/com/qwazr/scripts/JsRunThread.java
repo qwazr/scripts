@@ -24,28 +24,24 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 class JsRunThread extends RunThreadAbstract {
 
 	private final SimpleScriptContext scriptContext;
 	private final ScriptEngine scriptEngine;
 	private final File scriptFile;
-	private final Set<String> semaphores;
 
 	JsRunThread(ScriptEngine scriptEngine, File scriptFile, Map<String, ?> initialVariables) {
 		super(scriptFile.getName(), initialVariables);
 		this.scriptEngine = scriptEngine;
-		semaphores = new HashSet<>();
 
 		scriptContext = new SimpleScriptContext();
 		scriptContext.setBindings(new GlobalBindings(), ScriptContext.GLOBAL_SCOPE);
 
 		if (initialVariables != null)
-			initialVariables
-					.forEach((key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
+			initialVariables.forEach(
+					(key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
 
 		LibraryManager libraries = LibraryManager.getInstance();
 		if (libraries != null)
