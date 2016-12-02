@@ -16,7 +16,9 @@
 package com.qwazr.scripts.test;
 
 import com.google.common.io.Files;
-import com.qwazr.scripts.*;
+import com.qwazr.scripts.ScriptRunStatus;
+import com.qwazr.scripts.ScriptServiceInterface;
+import com.qwazr.scripts.ScriptsServer;
 import com.qwazr.utils.http.HttpClients;
 import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
@@ -25,11 +27,14 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import javax.ws.rs.WebApplicationException;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class AbstractScriptsTest {
@@ -44,8 +49,7 @@ public abstract class AbstractScriptsTest {
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
-		ScriptsServer.main(new String[] {});
-		Assert.assertNotNull(ScriptManager.getInstance());
+		ScriptsServer.main(new String[]{});
 		serverStarted = true;
 	}
 
@@ -64,23 +68,49 @@ public abstract class AbstractScriptsTest {
 		Assert.assertNotNull(statusMap);
 	}
 
-	@Test
-	public void test200start() throws URISyntaxException, InterruptedException {
-		Map<String, String> variables = new HashMap<>();
-		variables.put("ScriptTest", "ScriptTest");
-		List<ScriptRunStatus> list = client.runScriptVariables(TaskScript.class.getName(), null, null, variables);
+	private ScriptRunStatus waitFor(List<ScriptRunStatus> list, Function<ScriptRunStatus, Boolean> function)
+			throws InterruptedException {
 		Assert.assertNotNull(list);
 		Assert.assertEquals(1, list.size());
+		String runId = list.get(0).uuid;
 		for (int i = 0; i < 10; i++) {
-			if (TaskScript.EXECUTION_COUNT.get() > 0)
-				return;
-			Thread.sleep(2000);
+			final ScriptRunStatus status = client.getRunStatus(runId);
+			if (function.apply(status))
+				return status;
+			Thread.sleep(1000);
 		}
 		Assert.fail("Timeout while waiting for execution");
+		return null;
 	}
 
 	@Test
-	public void test300startClassError() throws InterruptedException, URISyntaxException {
+	public void test200startClass() throws URISyntaxException, InterruptedException {
+		Map<String, String> variables = new HashMap<>();
+		variables.put("ScriptTest", "ScriptTest");
+		final List<ScriptRunStatus> list = client.runScriptVariables(TaskScript.class.getName(), null, null, variables);
+		waitFor(list, status -> status.end != null && status.state ==
+				ScriptRunStatus.ScriptState.terminated);
+		Assert.assertTrue(TaskScript.EXECUTION_COUNT.get() > 0);
+	}
+
+	@Test
+	public void test200startJs() throws URISyntaxException, InterruptedException, IOException {
+		Map<String, String> variables = new HashMap<>();
+		variables.put("ScriptTestJS", "ScriptTestJS");
+		final List<ScriptRunStatus> list = client.runScriptVariables("src/test/js/test.js", null, null, variables);
+		ScriptRunStatus finalStatus = waitFor(list, status -> status.end != null && status.state ==
+				ScriptRunStatus.ScriptState.terminated);
+		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+			client.getRunOut(finalStatus.uuid).write(baos);
+			Assert.assertEquals("Hello World! ScriptTestJS", baos.toString().trim());
+			baos.reset();
+			client.getRunErr(finalStatus.uuid).write(baos);
+			Assert.assertEquals("World Hello! ScriptTestJS", baos.toString().trim());
+		}
+	}
+
+	@Test
+	public void test300startClassNotFound() throws InterruptedException, URISyntaxException {
 		try {
 			client.runScriptVariables("dummy", null, null, null);
 			Assert.fail("Exception not thrown");
@@ -90,13 +120,39 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test300startJSError() throws InterruptedException, URISyntaxException {
+	public void test300startJSNotFound() throws InterruptedException, URISyntaxException {
 		try {
 			client.runScriptVariables("dummy.js", null, null, null);
 			Assert.fail("Exception not thrown");
 		} catch (WebApplicationException e) {
 			Assert.assertEquals(404, e.getResponse().getStatus());
 		}
+	}
+
+	@Test
+	public void test400startJSError() throws InterruptedException, URISyntaxException, IOException {
+		final List<ScriptRunStatus> list = client.runScriptVariables("src/test/js/error.js", null, null, null);
+		final ScriptRunStatus finalStatus = waitFor(list, status -> status.end != null && status.state ==
+				ScriptRunStatus.ScriptState.error);
+		Assert.assertEquals("ReferenceError: \"erroneous\" is not defined in <eval> at line number 1",
+				finalStatus.error);
+	}
+
+	private void checkNotFound(Runnable runner) {
+		try {
+			runner.run();
+			Assert.fail("Not found exception not thrown");
+		} catch (WebApplicationException e) {
+			if (e.getResponse().getStatus() != 404)
+				throw e;
+		}
+	}
+
+	@Test
+	public void test500notFound() {
+		checkNotFound(() -> client.getRunStatus("dummy"));
+		checkNotFound(() -> client.getRunOut("dummy"));
+		checkNotFound(() -> client.getRunErr("dummy"));
 	}
 
 	@Test

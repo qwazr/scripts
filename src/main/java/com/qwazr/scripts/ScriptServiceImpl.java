@@ -29,11 +29,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class ScriptServiceImpl implements ScriptServiceInterface {
+class ScriptServiceImpl implements ScriptServiceInterface {
 
-	private static final Logger logger = LoggerFactory.getLogger(ScriptServiceImpl.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptServiceImpl.class);
 
-	public static final ScriptServiceInterface INSTANCE = new ScriptServiceImpl();
+	private static ScriptServiceImpl INSTANCE;
+
+	static ScriptServiceInterface getInstance() {
+		if (INSTANCE != null)
+			return INSTANCE;
+		synchronized (ScriptServiceImpl.class) {
+			if (INSTANCE == null)
+				INSTANCE = new ScriptServiceImpl();
+			return INSTANCE;
+		}
+	}
 
 	@Override
 	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
@@ -44,50 +54,50 @@ public class ScriptServiceImpl implements ScriptServiceInterface {
 	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group,
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 		try {
-			return Arrays.asList(ScriptManager.INSTANCE.runAsync(scriptPath, variables));
+			return Arrays.asList(ScriptManager.getInstance().runAsync(scriptPath, variables));
 		} catch (Exception e) {
-			throw ServerException.getJsonException(logger, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
-	private RunThreadAbstract getRunThread(final String run_id) throws ServerException {
-		final RunThreadAbstract runThread = ScriptManager.INSTANCE.getRunThread(run_id);
+	private RunThreadAbstract getRunThread(final String runId) throws ServerException {
+		final RunThreadAbstract runThread = ScriptManager.getInstance().getRunThread(runId);
 		if (runThread == null)
 			throw new ServerException(Status.NOT_FOUND, "No status found");
 		return runThread;
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(final String run_id) {
+	public ScriptRunStatus getRunStatus(final String runId) {
 		try {
-			return getRunThread(run_id).getStatus();
+			return getRunThread(runId).getStatus();
 		} catch (ServerException e) {
-			throw ServerException.getTextException(logger, e);
+			throw ServerException.getTextException(LOGGER, e);
 		}
 	}
 
 	@Override
-	public StreamingOutput getRunOut(final String run_id) {
+	public StreamingOutput getRunOut(final String runId) {
 		try {
-			return AbstractStreamingOutput.with(new StringReader(getRunThread(run_id).getOut()),
+			return AbstractStreamingOutput.with(new StringReader(getRunThread(runId).getOut()),
 					CharsetUtils.CharsetUTF8);
 		} catch (ServerException e) {
-			throw ServerException.getTextException(logger, e);
+			throw ServerException.getTextException(LOGGER, e);
 		}
 	}
 
 	@Override
-	public StreamingOutput getRunErr(final String run_id) {
+	public StreamingOutput getRunErr(final String runId) {
 		try {
-			return AbstractStreamingOutput.with(new StringReader(getRunThread(run_id).getErr()),
+			return AbstractStreamingOutput.with(new StringReader(getRunThread(runId).getErr()),
 					CharsetUtils.CharsetUTF8);
 		} catch (ServerException e) {
-			throw ServerException.getTextException(logger, e);
+			throw ServerException.getTextException(LOGGER, e);
 		}
 	}
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
-		return ScriptManager.INSTANCE.getRunsStatus();
+		return ScriptManager.getInstance().getRunsStatus();
 	}
 }

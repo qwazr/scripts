@@ -79,7 +79,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	 */
 	static ScriptServiceInterface getClient(final Boolean local, final String group) throws URISyntaxException {
 		if (local != null && local)
-			return ScriptServiceImpl.INSTANCE;
+			return ScriptServiceImpl.getInstance();
 		final SortedSet<String> nodes =
 				ClusterManager.INSTANCE.getNodesByGroupByService(group, ScriptManager.SERVICE_NAME_SCRIPT);
 		if (nodes == null)
@@ -90,7 +90,7 @@ public interface ScriptServiceInterface extends ServiceInterface {
 		if (nodes.size() == 1) {
 			final String node = nodes.first();
 			if (local == null && ClusterManager.INSTANCE.getHttpAddressKey().equals(node))
-				return ScriptServiceImpl.INSTANCE;
+				return ScriptServiceImpl.getInstance();
 			return new ScriptSingleClient(new RemoteService(node));
 		}
 		return new ScriptMultiClient(RemoteService.build(nodes));

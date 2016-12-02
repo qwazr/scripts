@@ -26,11 +26,11 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.WebApplicationException;
 import java.util.*;
 
-public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> implements ScriptServiceInterface {
+class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> implements ScriptServiceInterface {
 
-	private static final Logger logger = LoggerFactory.getLogger(ScriptMultiClient.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptMultiClient.class);
 
-	public ScriptMultiClient(RemoteService... remotes) {
+	ScriptMultiClient(RemoteService... remotes) {
 		super(new ScriptSingleClient[remotes.length], remotes);
 	}
 
@@ -80,7 +80,7 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 	@Override
 	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group, TargetRuleEnum rule,
 			Map<String, String> variables) {
-		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(logger);
+		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(LOGGER);
 		if (rule == null)
 			rule = TargetRuleEnum.one;
 		switch (rule) {
@@ -90,17 +90,6 @@ public class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClien
 			case one:
 				return runScriptRuleOne(exceptionHolder, scriptPath, group, rule, variables);
 		}
-	}
-
-	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule,
-			final String... variables) {
-		if (variables == null || variables.length == 0)
-			return runScript(scriptPath, group, rule);
-		HashMap<String, String> variablesMap = new HashMap<>();
-		int l = variables.length / 2;
-		for (int i = 0; i < l; i++)
-			variablesMap.put(variables[i * 2], variables[i * 2 + 1]);
-		return runScriptVariables(scriptPath, group, rule, variablesMap);
 	}
 
 	@Override

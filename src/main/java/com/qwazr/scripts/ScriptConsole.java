@@ -18,11 +18,24 @@ package com.qwazr.scripts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ScriptConsole {
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 
-	private static final Logger logger = LoggerFactory.getLogger(ConsoleLogger.class);
+public class ScriptConsole implements Closeable {
 
-	public void log(Object object) {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleLogger.class);
+
+	private PrintWriter stdError;
+
+	public ScriptConsole(final Writer errorWriter) {
+		this.stdError =
+				errorWriter == null ? null :
+						errorWriter instanceof PrintWriter ? (PrintWriter) errorWriter : new PrintWriter(errorWriter);
+	}
+
+	public void log(final Object object) {
 		getLog().info(object);
 	}
 
@@ -30,63 +43,77 @@ public class ScriptConsole {
 		return ConsoleLogger.INSTANCE;
 	}
 
+	public void error(final Object object) throws IOException {
+		if (object != null)
+			if (stdError != null)
+				stdError.println(object.toString());
+			else
+				ConsoleLogger.INSTANCE.error(object.toString());
+	}
+
+	@Override
+	public void close() {
+		if (stdError != null)
+			stdError.close();
+	}
+
 	public static class ConsoleLogger {
 
 		private static final ConsoleLogger INSTANCE = new ConsoleLogger();
 
-		public void info(Object object) {
+		public void info(final Object object) {
 			if (object == null)
 				return;
-			if (!logger.isInfoEnabled())
+			if (!LOGGER.isInfoEnabled())
 				return;
 			if (object instanceof Throwable)
-				logger.info(object.toString(), (Throwable) object);
+				LOGGER.info(object.toString(), (Throwable) object);
 			else
-				logger.info(object.toString());
+				LOGGER.info(object.toString());
 		}
 
-		public void warn(Object object) {
+		public void warn(final Object object) {
 			if (object == null)
 				return;
-			if (!logger.isWarnEnabled())
+			if (!LOGGER.isWarnEnabled())
 				return;
 			if (object instanceof Throwable)
-				logger.warn(object.toString(), (Throwable) object);
+				LOGGER.warn(object.toString(), (Throwable) object);
 			else
-				logger.warn(object.toString());
+				LOGGER.warn(object.toString());
 		}
 
-		public void error(Object object) {
+		public void error(final Object object) {
 			if (object == null)
 				return;
-			if (!logger.isErrorEnabled())
+			if (!LOGGER.isErrorEnabled())
 				return;
 			if (object instanceof Throwable)
-				logger.error(object.toString(), (Throwable) object);
+				LOGGER.error(object.toString(), (Throwable) object);
 			else
-				logger.error(object.toString());
+				LOGGER.error(object.toString());
 		}
 
 		public void debug(Object object) {
 			if (object == null)
 				return;
-			if (!logger.isDebugEnabled())
+			if (!LOGGER.isDebugEnabled())
 				return;
 			if (object instanceof Throwable)
-				logger.debug(object.toString(), (Throwable) object);
+				LOGGER.debug(object.toString(), (Throwable) object);
 			else
-				logger.debug(object.toString());
+				LOGGER.debug(object.toString());
 		}
 
 		public void trace(Object object) {
 			if (object == null)
 				return;
-			if (!logger.isTraceEnabled())
+			if (!LOGGER.isTraceEnabled())
 				return;
 			if (object instanceof Throwable)
-				logger.trace(object.toString(), (Throwable) object);
+				LOGGER.trace(object.toString(), (Throwable) object);
 			else
-				logger.trace(object.toString());
+				LOGGER.trace(object.toString());
 		}
 
 	}

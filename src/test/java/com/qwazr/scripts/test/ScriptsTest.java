@@ -15,7 +15,6 @@
  */
 package com.qwazr.scripts.test;
 
-import com.qwazr.scripts.ScriptServiceImpl;
 import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptSingleClient;
 import org.junit.Assert;
@@ -27,7 +26,7 @@ import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ ScriptsTest.LocalTest.class, ScriptsTest.SingleClientTest.class })
+@Suite.SuiteClasses({ScriptsTest.LocalTest.class, ScriptsTest.SingleClientTest.class})
 public class ScriptsTest {
 
 	public static class LocalTest extends AbstractScriptsTest {
@@ -36,7 +35,6 @@ public class ScriptsTest {
 		protected ScriptServiceInterface getClient() throws URISyntaxException, InterruptedException {
 			ScriptServiceInterface client = ScriptServiceInterface.getClient(true, null);
 			Assert.assertNotNull(client);
-			Assert.assertTrue(client instanceof ScriptServiceImpl);
 			return client;
 		}
 	}

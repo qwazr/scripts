@@ -42,7 +42,7 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 	protected final String uuid;
 
 	protected final IOUtils.CloseableList closeables;
-	protected final Writer outWriter;
+	protected final Writer outputWriter;
 	protected final Writer errorWriter;
 
 	protected RunThreadAbstract(String scriptName, Map<String, ?> initialVariables) {
@@ -54,12 +54,13 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 		endTime = null;
 		expirationTime = null;
 		this.closeables = new IOUtils.CloseableList();
-		this.outWriter = new StringWriter();
+		this.outputWriter = new StringWriter();
 		this.errorWriter = new StringWriter();
 	}
 
+	@Override
 	final public void close() {
-		IOUtils.close(outWriter, errorWriter);
+		IOUtils.close(outputWriter, errorWriter);
 	}
 
 	@Override
@@ -70,10 +71,6 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 	@Override
 	final public String getUUID() {
 		return uuid;
-	}
-
-	final public ScriptRunStatus.ScriptState getState() {
-		return state;
 	}
 
 	@Override
@@ -90,7 +87,7 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 	}
 
 	final public String getOut() {
-		return outWriter == null ? StringUtils.EMPTY : outWriter.toString();
+		return outputWriter == null ? StringUtils.EMPTY : outputWriter.toString();
 	}
 
 	final public String getErr() {

@@ -37,9 +37,9 @@ public class ScriptManager {
 
 	public static final String SERVICE_NAME_SCRIPT = "scripts";
 
-	private static final Logger logger = LoggerFactory.getLogger(ScriptManager.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptManager.class);
 
-	static ScriptManager INSTANCE = null;
+	private static ScriptManager INSTANCE = null;
 
 	public synchronized static void load(final ServerBuilder serverBuilder) throws IOException {
 		if (INSTANCE != null)
@@ -68,11 +68,11 @@ public class ScriptManager {
 	final ExecutorService executorService;
 	final File dataDir;
 
-	private ScriptManager(ExecutorService executorService, File rootDirectory) throws IOException, URISyntaxException {
-
+	private ScriptManager(final ExecutorService executorService, final File rootDirectory)
+			throws IOException, URISyntaxException {
 		dataDir = rootDirectory;
 		// Load Nashorn
-		ScriptEngineManager manager = new ScriptEngineManager();
+		final ScriptEngineManager manager = new ScriptEngineManager();
 		scriptEngine = manager.getEngineByName("nashorn");
 		runsMap = new HashMap<>();
 		this.executorService = executorService;
@@ -89,16 +89,6 @@ public class ScriptManager {
 		return scriptFile;
 	}
 
-	public String getScript(String scriptPath) throws IOException, ServerException {
-		File scriptFile = getScriptFile(scriptPath);
-		FileReader fileReader = new FileReader(scriptFile);
-		try {
-			return IOUtils.toString(fileReader);
-		} finally {
-			IOUtils.closeQuietly(fileReader);
-		}
-	}
-
 	private RunThreadAbstract getNewScriptRunThread(final String scriptPath, final Map<String, ?> objects)
 			throws ServerException, IOException, ClassNotFoundException {
 		final RunThreadAbstract scriptRunThread;
@@ -112,8 +102,8 @@ public class ScriptManager {
 
 	public RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects)
 			throws ServerException, IOException, ClassNotFoundException {
-		if (logger.isInfoEnabled())
-			logger.info("Run sync: " + scriptPath);
+		if (LOGGER.isInfoEnabled())
+			LOGGER.info("Run sync: " + scriptPath);
 		RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		scriptRunThread.run();
 		expireScriptRunThread();
@@ -122,8 +112,8 @@ public class ScriptManager {
 
 	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects)
 			throws ServerException, IOException, ClassNotFoundException {
-		if (logger.isInfoEnabled())
-			logger.info("Run async: " + scriptPath);
+		if (LOGGER.isInfoEnabled())
+			LOGGER.info("Run async: " + scriptPath);
 		RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		executorService.execute(scriptRunThread);
 		expireScriptRunThread();
@@ -145,8 +135,8 @@ public class ScriptManager {
 					uuidsToDelete.add(scriptRunThread.getUUID());
 			});
 			uuidsToDelete.forEach(runsMap::remove);
-			if (logger.isInfoEnabled())
-				logger.info("Expire " + uuidsToDelete.size() + " jobs");
+			if (LOGGER.isInfoEnabled())
+				LOGGER.info("Expire " + uuidsToDelete.size() + " jobs");
 		});
 	}
 

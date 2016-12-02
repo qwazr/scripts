@@ -16,13 +16,11 @@
 package com.qwazr.scripts;
 
 import com.qwazr.library.LibraryManager;
-import com.qwazr.utils.IOUtils;
 
 import javax.script.*;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.StringWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,24 +41,20 @@ class JsRunThread extends RunThreadAbstract {
 			initialVariables.forEach(
 					(key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
 
-		LibraryManager libraries = LibraryManager.getInstance();
+		final LibraryManager libraries = LibraryManager.getInstance();
 		if (libraries != null)
 			scriptContext.setAttribute("library", libraries, ScriptContext.ENGINE_SCOPE);
 		scriptContext.setAttribute("closeable", closeables, ScriptContext.ENGINE_SCOPE);
 
 		this.scriptFile = scriptFile;
-		scriptContext.setWriter(new StringWriter());
-		scriptContext.setErrorWriter(new StringWriter());
+		scriptContext.setWriter(outputWriter);
+		scriptContext.setErrorWriter(errorWriter);
 	}
 
 	@Override
-	protected void runner() throws FileNotFoundException, ScriptException {
-		FileReader fileReader = null;
-		try {
-			fileReader = new FileReader(scriptFile);
+	protected void runner() throws IOException, ScriptException {
+		try (final FileReader fileReader = new FileReader(scriptFile)) {
 			scriptEngine.eval(fileReader, scriptContext);
-		} finally {
-			IOUtils.close(fileReader);
 		}
 	}
 
@@ -72,7 +66,7 @@ class JsRunThread extends RunThreadAbstract {
 		private static final long serialVersionUID = -7250097260119419346L;
 
 		private GlobalBindings() {
-			this.put("console", new ScriptConsole());
+			this.put("console", closeables.add(new ScriptConsole(errorWriter)));
 		}
 
 		public void sleep(int msTimeout) throws InterruptedException {
