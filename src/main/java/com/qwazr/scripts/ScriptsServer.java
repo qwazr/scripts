@@ -17,20 +17,20 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.server.GenericServer;
-import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerConfiguration;
 
-public class ScriptsServer {
+import java.io.IOException;
 
-	public static GenericServer start() throws Exception {
-		final ServerBuilder builder = new ServerBuilder(new ServerConfiguration());
-		ClusterManager.load(builder, null, null);
-		ScriptManager.load(builder);
-		return builder.build().start(true);
+public class ScriptsServer extends GenericServer {
+
+	private ScriptsServer(final ServerConfiguration serverConfiguration) throws IOException {
+		super(serverConfiguration);
+		ClusterManager.load(getBuilder());
+		ScriptManager.load(getBuilder());
 	}
 
 	public static void main(String[] args) throws Exception {
-		start();
+		new ScriptsServer(new ServerConfiguration(args)).start(true);
 	}
 
 }
