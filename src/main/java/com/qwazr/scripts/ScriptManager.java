@@ -18,8 +18,8 @@ package com.qwazr.scripts;
 import com.qwazr.utils.LockUtils.ReadWriteLock;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerBuilder;
+import com.qwazr.utils.server.ServerConfiguration;
 import com.qwazr.utils.server.ServerException;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -41,14 +40,14 @@ public class ScriptManager {
 
 	private static ScriptManager INSTANCE = null;
 
-	public synchronized static void load(final ServerBuilder serverBuilder) throws IOException {
+	public synchronized static void load(final ExecutorService executorService, final ServerBuilder builder,
+			final ServerConfiguration configuration) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new ScriptManager(serverBuilder.getExecutorService(),
-					serverBuilder.getServerConfiguration().dataDirectory);
-			if (serverBuilder != null)
-				serverBuilder.registerWebService(ScriptServiceImpl.class);
+			INSTANCE = new ScriptManager(executorService, configuration.dataDirectory);
+			if (builder != null)
+				builder.registerWebService(ScriptServiceImpl.class);
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}
@@ -65,17 +64,18 @@ public class ScriptManager {
 	private final ReadWriteLock runsMapLock = new ReadWriteLock();
 	private final HashMap<String, RunThreadAbstract> runsMap;
 
-	final ExecutorService executorService;
+	private final ExecutorService executorService;
+
 	final File dataDir;
 
 	private ScriptManager(final ExecutorService executorService, final File rootDirectory)
 			throws IOException, URISyntaxException {
+		this.executorService = executorService;
 		dataDir = rootDirectory;
 		// Load Nashorn
 		final ScriptEngineManager manager = new ScriptEngineManager();
 		scriptEngine = manager.getEngineByName("nashorn");
 		runsMap = new HashMap<>();
-		this.executorService = executorService;
 	}
 
 	private File getScriptFile(String scriptPath) throws ServerException {

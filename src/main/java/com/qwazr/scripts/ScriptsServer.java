@@ -17,16 +17,23 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.server.GenericServer;
+import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerConfiguration;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 public class ScriptsServer extends GenericServer {
 
 	private ScriptsServer(final ServerConfiguration serverConfiguration) throws IOException {
 		super(serverConfiguration);
-		ClusterManager.load(getBuilder());
-		ScriptManager.load(getBuilder());
+	}
+
+	@Override
+	protected void build(final ExecutorService executorService, final ServerBuilder builder,
+			final ServerConfiguration configuration) throws IOException {
+		ClusterManager.load(builder, configuration);
+		ScriptManager.load(executorService, builder, configuration);
 	}
 
 	public static void main(String[] args) throws Exception {
