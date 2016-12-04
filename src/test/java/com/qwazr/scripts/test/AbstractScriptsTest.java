@@ -15,7 +15,6 @@
  */
 package com.qwazr.scripts.test;
 
-import com.google.common.io.Files;
 import com.qwazr.scripts.ScriptRunStatus;
 import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptsServer;
@@ -45,11 +44,10 @@ public abstract class AbstractScriptsTest {
 	public void test000startServer() throws Exception {
 		if (serverStarted)
 			return;
-		final File dataDir = Files.createTempDir();
-		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
+		System.setProperty("QWAZR_DATA", new File("src/test").getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
-		ScriptsServer.main(new String[]{});
+		ScriptsServer.main(null);
 		serverStarted = true;
 	}
 
@@ -88,8 +86,7 @@ public abstract class AbstractScriptsTest {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTest", "ScriptTest");
 		final List<ScriptRunStatus> list = client.runScriptVariables(TaskScript.class.getName(), null, null, variables);
-		waitFor(list, status -> status.end != null && status.state ==
-				ScriptRunStatus.ScriptState.terminated);
+		waitFor(list, status -> status.end != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		Assert.assertTrue(TaskScript.EXECUTION_COUNT.get() > 0);
 	}
 
@@ -97,9 +94,9 @@ public abstract class AbstractScriptsTest {
 	public void test200startJs() throws URISyntaxException, InterruptedException, IOException {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTestJS", "ScriptTestJS");
-		final List<ScriptRunStatus> list = client.runScriptVariables("src/test/js/test.js", null, null, variables);
-		ScriptRunStatus finalStatus = waitFor(list, status -> status.end != null && status.state ==
-				ScriptRunStatus.ScriptState.terminated);
+		final List<ScriptRunStatus> list = client.runScriptVariables("js/test.js", null, null, variables);
+		ScriptRunStatus finalStatus =
+				waitFor(list, status -> status.end != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 			client.getRunOut(finalStatus.uuid).write(baos);
 			Assert.assertEquals("Hello World! ScriptTestJS", baos.toString().trim());
@@ -131,9 +128,9 @@ public abstract class AbstractScriptsTest {
 
 	@Test
 	public void test400startJSError() throws InterruptedException, URISyntaxException, IOException {
-		final List<ScriptRunStatus> list = client.runScriptVariables("src/test/js/error.js", null, null, null);
-		final ScriptRunStatus finalStatus = waitFor(list, status -> status.end != null && status.state ==
-				ScriptRunStatus.ScriptState.error);
+		final List<ScriptRunStatus> list = client.runScriptVariables("js/error.js", null, null, null);
+		final ScriptRunStatus finalStatus =
+				waitFor(list, status -> status.end != null && status.state == ScriptRunStatus.ScriptState.error);
 		Assert.assertEquals("ReferenceError: \"erroneous\" is not defined in <eval> at line number 1",
 				finalStatus.error);
 	}
