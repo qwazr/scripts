@@ -17,7 +17,7 @@ package com.qwazr.scripts;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.library.LibraryManager;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerException;
 
 import javax.ws.rs.core.Response;
 import java.util.HashMap;

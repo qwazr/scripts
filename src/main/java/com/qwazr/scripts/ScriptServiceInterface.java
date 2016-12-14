@@ -17,9 +17,9 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.cluster.service.TargetRuleEnum;
-import com.qwazr.utils.server.RemoteService;
-import com.qwazr.utils.server.ServiceInterface;
-import com.qwazr.utils.server.ServiceName;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.ServiceInterface;
+import com.qwazr.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;

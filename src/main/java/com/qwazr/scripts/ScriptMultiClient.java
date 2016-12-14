@@ -17,9 +17,9 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.utils.ExceptionUtils;
-import com.qwazr.utils.json.AbstractStreamingOutput;
-import com.qwazr.utils.json.client.JsonMultiClientAbstract;
-import com.qwazr.utils.server.RemoteService;
+import com.qwazr.server.AbstractStreamingOutput;
+import com.qwazr.server.client.JsonMultiClientAbstract;
+import com.qwazr.server.RemoteService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,11 +84,11 @@ class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> impl
 		if (rule == null)
 			rule = TargetRuleEnum.one;
 		switch (rule) {
-			case all:
-				return runScriptRuleAll(exceptionHolder, scriptPath, group, rule, variables);
-			default:
-			case one:
-				return runScriptRuleOne(exceptionHolder, scriptPath, group, rule, variables);
+		case all:
+			return runScriptRuleAll(exceptionHolder, scriptPath, group, rule, variables);
+		default:
+		case one:
+			return runScriptRuleOne(exceptionHolder, scriptPath, group, rule, variables);
 		}
 	}
 

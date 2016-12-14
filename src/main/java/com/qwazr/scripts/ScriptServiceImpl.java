@@ -17,8 +17,8 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
 import com.qwazr.utils.CharsetUtils;
-import com.qwazr.utils.json.AbstractStreamingOutput;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.AbstractStreamingOutput;
+import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

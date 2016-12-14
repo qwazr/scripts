@@ -17,9 +17,9 @@ package com.qwazr.scripts;
 
 import com.qwazr.utils.LockUtils.ReadWriteLock;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.server.ServerBuilder;
-import com.qwazr.utils.server.ServerConfiguration;
-import com.qwazr.utils.server.ServerException;
+import com.qwazr.server.ServerBuilder;
+import com.qwazr.server.configuration.ServerConfiguration;
+import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
