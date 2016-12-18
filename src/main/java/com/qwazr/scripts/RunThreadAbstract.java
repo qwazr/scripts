@@ -16,7 +16,6 @@
 package com.qwazr.scripts;
 
 import com.datastax.driver.core.utils.UUIDs;
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import org.slf4j.Logger;
@@ -37,6 +36,8 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 	private volatile Long expirationTime;
 	private volatile Exception exception;
 
+	protected final String httpAddressKey;
+
 	private final String scriptName;
 	private final Map<String, ?> initialVariables;
 	protected final String uuid;
@@ -45,7 +46,8 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 	protected final Writer outputWriter;
 	protected final Writer errorWriter;
 
-	protected RunThreadAbstract(String scriptName, Map<String, ?> initialVariables) {
+	protected RunThreadAbstract(String httpAddressKey, String scriptName, Map<String, ?> initialVariables) {
+		this.httpAddressKey = httpAddressKey;
 		this.scriptName = scriptName;
 		this.initialVariables = initialVariables;
 		uuid = UUIDs.timeBased().toString();
@@ -75,8 +77,8 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 
 	@Override
 	final public ScriptRunStatus getStatus() {
-		return new ScriptRunStatus(ClusterManager.INSTANCE.getHttpAddressKey(), scriptName, uuid, state, startTime,
-				endTime, initialVariables == null ? null : initialVariables.keySet(), exception);
+		return new ScriptRunStatus(httpAddressKey, scriptName, uuid, state, startTime, endTime,
+				initialVariables == null ? null : initialVariables.keySet(), exception);
 	}
 
 	@Override

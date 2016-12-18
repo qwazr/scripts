@@ -15,33 +15,72 @@
  */
 package com.qwazr.scripts;
 
+import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.library.LibraryManager;
+import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
-import com.qwazr.server.ServerBuilder;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
 
-import java.io.File;
+import javax.management.MBeanException;
+import javax.management.OperationsException;
+import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.Collection;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class ScriptsServer extends GenericServer {
+public class ScriptsServer implements BaseServer {
 
-	private ScriptsServer(final ServerConfiguration serverConfiguration) throws IOException {
-		super(serverConfiguration);
+	private final GenericServer server;
+	private final ExecutorService executorService;
+	private final ScriptManager scriptManager;
+
+	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
+		executorService = Executors.newCachedThreadPool();
+		GenericServer.Builder builder = GenericServer.of(configuration);
+		ClusterManager clusterManager = new ClusterManager(builder);
+		ClassLoaderManager classLoaderManager = new ClassLoaderManager(builder, Thread.currentThread());
+		LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
+		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
+		builder.webService(WelcomeShutdownService.class);
+		server = builder.build();
+	}
+
+	public ScriptManager getScriptManager() {
+		return scriptManager;
+	}
+
+	public void stop() {
+		server.stopAll();
+		executorService.shutdown();
 	}
 
 	@Override
-	protected void build(final ExecutorService executorService, final ServerBuilder builder,
-			final ServerConfiguration configuration, final Collection<File> etcFiles) throws IOException {
-		ClusterManager.load(builder, configuration);
-		ScriptManager.load(executorService, builder, configuration);
-		builder.registerWebService(WelcomeShutdownService.class);
+	public GenericServer getServer() {
+		return server;
 	}
 
-	public static void main(String[] args) throws Exception {
-		new ScriptsServer(new ServerConfiguration(args)).start(true);
+	private static volatile ScriptsServer INSTANCE;
+
+	public static ScriptsServer getInstance() {
+		return INSTANCE;
+	}
+
+	public static synchronized void main(final String... args)
+			throws IOException, ReflectiveOperationException, OperationsException, ServletException, MBeanException,
+			URISyntaxException, InterruptedException {
+		if (INSTANCE != null)
+			shutdown();
+		INSTANCE = new ScriptsServer(new ServerConfiguration(args));
+		INSTANCE.start();
+	}
+
+	public static synchronized void shutdown() {
+		if (INSTANCE != null)
+			INSTANCE.stop();
+		INSTANCE = null;
 	}
 
 }

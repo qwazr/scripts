@@ -15,9 +15,11 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.library.LibraryManager;
-
-import javax.script.*;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
+import javax.script.SimpleScriptContext;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,9 +32,9 @@ class JsRunThread extends RunThreadAbstract {
 	private final ScriptEngine scriptEngine;
 	private final File scriptFile;
 
-	JsRunThread(ScriptEngine scriptEngine, File scriptFile, Map<String, ?> initialVariables) {
-		super(scriptFile.getName(), initialVariables);
-		this.scriptEngine = scriptEngine;
+	JsRunThread(ScriptManager scriptManager, File scriptFile, Map<String, ?> initialVariables) {
+		super(scriptManager.clusterManager.getHttpAddressKey(), scriptFile.getName(), initialVariables);
+		this.scriptEngine = scriptManager.scriptEngine;
 
 		scriptContext = new SimpleScriptContext();
 		scriptContext.setBindings(new GlobalBindings(), ScriptContext.GLOBAL_SCOPE);
@@ -41,9 +43,8 @@ class JsRunThread extends RunThreadAbstract {
 			initialVariables.forEach(
 					(key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
 
-		final LibraryManager libraries = LibraryManager.getInstance();
-		if (libraries != null)
-			scriptContext.setAttribute("library", libraries, ScriptContext.ENGINE_SCOPE);
+		if (scriptManager.libraryManager != null)
+			scriptContext.setAttribute("library", scriptManager.libraryManager, ScriptContext.ENGINE_SCOPE);
 		scriptContext.setAttribute("closeable", closeables, ScriptContext.ENGINE_SCOPE);
 
 		this.scriptFile = scriptFile;

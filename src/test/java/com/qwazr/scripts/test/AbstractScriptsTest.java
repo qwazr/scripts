@@ -47,7 +47,7 @@ public abstract class AbstractScriptsTest {
 		System.setProperty("QWAZR_DATA", new File("src/test").getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
-		ScriptsServer.main(null);
+		ScriptsServer.main();
 		serverStarted = true;
 	}
 
@@ -57,7 +57,8 @@ public abstract class AbstractScriptsTest {
 
 	@Test
 	public void test005getClient() throws URISyntaxException, InterruptedException {
-		this.client = getClient();
+		client = getClient();
+		Assert.assertNotNull(client);
 	}
 
 	@Test

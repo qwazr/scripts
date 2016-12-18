@@ -15,67 +15,76 @@
  **/
 package com.qwazr.scripts;
 
+import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.library.LibraryManager;
+import com.qwazr.server.GenericServer;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.ServerException;
 import com.qwazr.utils.LockUtils.ReadWriteLock;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.server.ServerBuilder;
-import com.qwazr.server.configuration.ServerConfiguration;
-import com.qwazr.server.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedSet;
 import java.util.concurrent.ExecutorService;
 
 public class ScriptManager {
 
-	public static final String SERVICE_NAME_SCRIPT = "scripts";
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptManager.class);
 
-	private static ScriptManager INSTANCE = null;
-
-	public synchronized static void load(final ExecutorService executorService, final ServerBuilder builder,
-			final ServerConfiguration configuration) throws IOException {
-		if (INSTANCE != null)
-			throw new IOException("Already loaded");
-		try {
-			INSTANCE = new ScriptManager(executorService, configuration.dataDirectory);
-			if (builder != null)
-				builder.registerWebService(ScriptServiceImpl.class);
-		} catch (URISyntaxException e) {
-			throw new IOException(e);
-		}
-	}
-
-	public static ScriptManager getInstance() {
-		if (INSTANCE == null)
-			throw new RuntimeException("The scripts service is not enabled");
-		return INSTANCE;
-	}
-
-	private final ScriptEngine scriptEngine;
+	final ScriptEngine scriptEngine;
 
 	private final ReadWriteLock runsMapLock = new ReadWriteLock();
 	private final HashMap<String, RunThreadAbstract> runsMap;
 
 	private final ExecutorService executorService;
+	final LibraryManager libraryManager;
+	final ClassLoaderManager classLoaderManager;
+	final ClusterManager clusterManager;
+	private final ScriptServiceInterface service;
 
-	final File dataDir;
+	private final File dataDir;
 
-	private ScriptManager(final ExecutorService executorService, final File rootDirectory)
+	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
+			final ClusterManager clusterManager, final LibraryManager libraryManager, final File rootDirectory)
 			throws IOException, URISyntaxException {
 		this.executorService = executorService;
+		this.classLoaderManager = classLoaderManager;
+		this.clusterManager = clusterManager;
+		this.libraryManager = libraryManager;
 		dataDir = rootDirectory;
 		// Load Nashorn
 		final ScriptEngineManager manager = new ScriptEngineManager();
 		scriptEngine = manager.getEngineByName("nashorn");
 		runsMap = new HashMap<>();
+		service = new ScriptServiceImpl(this);
+	}
+
+	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
+			final ClusterManager clusterManager, final LibraryManager libraryManager,
+			final GenericServer.Builder builder) throws IOException, URISyntaxException {
+		this(executorService, classLoaderManager, clusterManager, libraryManager,
+				builder.getConfiguration().dataDirectory);
+		builder.webService(ScriptServiceImpl.class);
+		builder.contextAttribute(this);
+	}
+
+	public ScriptServiceInterface getService() {
+		return service;
 	}
 
 	private File getScriptFile(String scriptPath) throws ServerException {
@@ -93,9 +102,9 @@ public class ScriptManager {
 			throws ServerException, IOException, ClassNotFoundException {
 		final RunThreadAbstract scriptRunThread;
 		if (scriptPath.endsWith(".js"))
-			scriptRunThread = new JsRunThread(scriptEngine, getScriptFile(scriptPath), objects);
+			scriptRunThread = new JsRunThread(this, getScriptFile(scriptPath), objects);
 		else
-			scriptRunThread = new JavaRunThread(scriptPath, objects);
+			scriptRunThread = new JavaRunThread(this, scriptPath, objects);
 		addScriptRunThread(scriptRunThread);
 		return scriptRunThread;
 	}
@@ -152,4 +161,30 @@ public class ScriptManager {
 		return runsMapLock.read(() -> runsMap.get(uuid));
 	}
 
+	/**
+	 * Return a script service client
+	 *
+	 * @param local set true to require a local client. False to avoid a local client. Null to let the method decide.
+	 * @param group an optional group
+	 * @return a script service client
+	 * @throws URISyntaxException
+	 */
+	public ScriptServiceInterface getClient(final Boolean local, final String group) throws URISyntaxException {
+		if (local != null && local)
+			return service;
+		final SortedSet<String> nodes =
+				clusterManager.getNodesByGroupByService(group, ScriptServiceInterface.SERVICE_NAME);
+		if (nodes == null)
+			throw new WebApplicationException("The script service is not available");
+		if (nodes.size() == 0)
+			throw new WebApplicationException("No available script node for the group: " + group,
+					Response.Status.EXPECTATION_FAILED);
+		if (nodes.size() == 1) {
+			final String node = nodes.first();
+			if (local == null && clusterManager.getHttpAddressKey().equals(node))
+				return service;
+			return new ScriptSingleClient(new RemoteService(node));
+		}
+		return new ScriptMultiClient(RemoteService.build(nodes));
+	}
 }

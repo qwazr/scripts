@@ -15,26 +15,29 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.cluster.service.TargetRuleEnum;
-import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 
-@RolesAllowed(ScriptManager.SERVICE_NAME_SCRIPT)
+@RolesAllowed(ScriptServiceInterface.SERVICE_NAME)
 @Path("/scripts")
-@ServiceName(ScriptManager.SERVICE_NAME_SCRIPT)
+@ServiceName(ScriptServiceInterface.SERVICE_NAME)
 public interface ScriptServiceInterface extends ServiceInterface {
+
+	String SERVICE_NAME = "scripts";
 
 	@GET
 	@Path("/run/{script_path : .+}")
@@ -68,32 +71,5 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@Path("/status/{run_id}/err")
 	@Produces(MediaType.TEXT_PLAIN)
 	StreamingOutput getRunErr(@PathParam("run_id") String run_id);
-
-	/**
-	 * Return a script service client
-	 *
-	 * @param local set true to require a local client. False to avoid a local client. Null to let the method decide.
-	 * @param group an optional group
-	 * @return a script service client
-	 * @throws URISyntaxException
-	 */
-	static ScriptServiceInterface getClient(final Boolean local, final String group) throws URISyntaxException {
-		if (local != null && local)
-			return ScriptServiceImpl.getInstance();
-		final SortedSet<String> nodes =
-				ClusterManager.INSTANCE.getNodesByGroupByService(group, ScriptManager.SERVICE_NAME_SCRIPT);
-		if (nodes == null)
-			throw new WebApplicationException("The script service is not available");
-		if (nodes.size() == 0)
-			throw new WebApplicationException("No available script node for the group: " + group,
-					Response.Status.EXPECTATION_FAILED);
-		if (nodes.size() == 1) {
-			final String node = nodes.first();
-			if (local == null && ClusterManager.INSTANCE.getHttpAddressKey().equals(node))
-				return ScriptServiceImpl.getInstance();
-			return new ScriptSingleClient(new RemoteService(node));
-		}
-		return new ScriptMultiClient(RemoteService.build(nodes));
-	}
 
 }

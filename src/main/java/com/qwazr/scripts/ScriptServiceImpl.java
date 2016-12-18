@@ -16,12 +16,14 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.service.TargetRuleEnum;
-import com.qwazr.utils.CharsetUtils;
+import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.CharsetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.PostConstruct;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.StringReader;
@@ -29,20 +31,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-class ScriptServiceImpl implements ScriptServiceInterface {
+class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInterface {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptServiceImpl.class);
 
-	private static ScriptServiceImpl INSTANCE;
+	private volatile ScriptManager scriptManager;
 
-	static ScriptServiceInterface getInstance() {
-		if (INSTANCE != null)
-			return INSTANCE;
-		synchronized (ScriptServiceImpl.class) {
-			if (INSTANCE == null)
-				INSTANCE = new ScriptServiceImpl();
-			return INSTANCE;
-		}
+	ScriptServiceImpl(final ScriptManager scriptManager) {
+		this.scriptManager = scriptManager;
+	}
+
+	public ScriptServiceImpl() {
+		this(null);
+	}
+
+	@PostConstruct
+	public void init() {
+		scriptManager = getContextAttribute(ScriptManager.class);
 	}
 
 	@Override
@@ -54,14 +59,14 @@ class ScriptServiceImpl implements ScriptServiceInterface {
 	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group,
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 		try {
-			return Arrays.asList(ScriptManager.getInstance().runAsync(scriptPath, variables));
+			return Arrays.asList(scriptManager.runAsync(scriptPath, variables));
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 
 	private RunThreadAbstract getRunThread(final String runId) throws ServerException {
-		final RunThreadAbstract runThread = ScriptManager.getInstance().getRunThread(runId);
+		final RunThreadAbstract runThread = scriptManager.getRunThread(runId);
 		if (runThread == null)
 			throw new ServerException(Status.NOT_FOUND, "No status found");
 		return runThread;
@@ -98,6 +103,7 @@ class ScriptServiceImpl implements ScriptServiceInterface {
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
-		return ScriptManager.getInstance().getRunsStatus();
+		return scriptManager.getRunsStatus();
 	}
+
 }
