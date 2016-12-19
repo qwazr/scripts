@@ -34,15 +34,14 @@ import java.util.concurrent.Executors;
 public class ScriptsServer implements BaseServer {
 
 	private final GenericServer server;
-	private final ExecutorService executorService;
 	private final ScriptManager scriptManager;
 
 	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
-		executorService = Executors.newCachedThreadPool();
-		GenericServer.Builder builder = GenericServer.of(configuration);
-		ClusterManager clusterManager = new ClusterManager(builder);
-		ClassLoaderManager classLoaderManager = new ClassLoaderManager(builder, Thread.currentThread());
-		LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
+		final ExecutorService executorService = Executors.newCachedThreadPool();
+		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
+		final ClusterManager clusterManager = new ClusterManager(builder);
+		final ClassLoaderManager classLoaderManager = new ClassLoaderManager(builder, Thread.currentThread());
+		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
 		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
 		builder.webService(WelcomeShutdownService.class);
 		server = builder.build();
@@ -50,11 +49,6 @@ public class ScriptsServer implements BaseServer {
 
 	public ScriptManager getScriptManager() {
 		return scriptManager;
-	}
-
-	public void stop() {
-		server.stopAll();
-		executorService.shutdown();
 	}
 
 	@Override
