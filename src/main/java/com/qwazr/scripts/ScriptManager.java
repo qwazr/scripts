@@ -46,18 +46,12 @@ public class ScriptManager {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptManager.class);
 
-	private static ScriptEngine scriptEngine;
-
-	// Load Nashorn
-	static {
-		final ScriptEngineManager manager = new ScriptEngineManager();
-		scriptEngine = manager.getEngineByName("nashorn");
-	}
-
 	private final ReadWriteLock runsMapLock = new ReadWriteLock();
 	private final HashMap<String, RunThreadAbstract> runsMap;
 
 	private final ExecutorService executorService;
+	private final ScriptEngine scriptEngine;
+
 	final LibraryManager libraryManager;
 	final ClassLoaderManager classLoaderManager;
 	final ClusterManager clusterManager;
@@ -72,6 +66,10 @@ public class ScriptManager {
 		this.classLoaderManager = classLoaderManager;
 		this.clusterManager = clusterManager;
 		this.libraryManager = libraryManager;
+
+		final ScriptEngineManager manager = new ScriptEngineManager(classLoaderManager.getClassLoader());
+		scriptEngine = manager.getEngineByName("nashorn");
+
 		dataDir = rootDirectory;
 		runsMap = new HashMap<>();
 		service = new ScriptServiceImpl(this);
