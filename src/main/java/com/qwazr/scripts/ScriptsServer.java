@@ -39,10 +39,10 @@ public class ScriptsServer implements BaseServer {
 	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
-		final ClusterManager clusterManager = new ClusterManager(builder);
 		final ClassLoaderManager classLoaderManager = new ClassLoaderManager(builder, Thread.currentThread());
+		final ClusterManager clusterManager = new ClusterManager(builder);
 		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
-		scriptManager = new ScriptManager(executorService, clusterManager, classLoaderManager, libraryManager, builder);
+		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
 		builder.webService(WelcomeShutdownService.class);
 		server = builder.build();
 	}

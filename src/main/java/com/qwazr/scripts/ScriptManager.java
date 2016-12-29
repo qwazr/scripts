@@ -58,8 +58,8 @@ public class ScriptManager {
 
 	private final File dataDir;
 
-	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
-			final ClassLoaderManager classLoaderManager, final LibraryManager libraryManager, final File rootDirectory)
+	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
+			final ClusterManager clusterManager, final LibraryManager libraryManager, final File rootDirectory)
 			throws IOException, URISyntaxException {
 		this.executorService = executorService;
 		this.classLoaderManager = classLoaderManager;
@@ -76,10 +76,10 @@ public class ScriptManager {
 		serviceBuilder = new ScriptServiceBuilder(new ScriptServiceImpl(this));
 	}
 
-	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
-			final ClassLoaderManager classLoaderManager, final LibraryManager libraryManager,
+	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
+			final ClusterManager clusterManager, final LibraryManager libraryManager,
 			final GenericServer.Builder builder) throws IOException, URISyntaxException {
-		this(executorService, clusterManager, classLoaderManager, libraryManager,
+		this(executorService, classLoaderManager, clusterManager, libraryManager,
 				builder.getConfiguration().dataDirectory);
 		builder.webService(ScriptServiceImpl.class);
 		builder.contextAttribute(this);
