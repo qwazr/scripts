@@ -15,7 +15,7 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.cluster.TargetRuleEnum;
 import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.client.JsonMultiClientAbstract;

@@ -16,7 +16,7 @@
 package com.qwazr.scripts;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.cluster.ClusterManager;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
@@ -42,7 +42,7 @@ public class ScriptsServer implements BaseServer {
 		final ClusterManager clusterManager = new ClusterManager(builder);
 		final ClassLoaderManager classLoaderManager = new ClassLoaderManager(builder, Thread.currentThread());
 		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
-		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
+		scriptManager = new ScriptManager(executorService, clusterManager, classLoaderManager, libraryManager, builder);
 		builder.webService(WelcomeShutdownService.class);
 		server = builder.build();
 	}

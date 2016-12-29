@@ -18,6 +18,7 @@ package com.qwazr.scripts.test;
 import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptSingleClient;
 import com.qwazr.scripts.ScriptsServer;
+import com.qwazr.server.RemoteService;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -34,7 +35,8 @@ public class ScriptsTest {
 
 		@Override
 		protected ScriptServiceInterface getClient() throws URISyntaxException, InterruptedException {
-			final ScriptServiceInterface client = ScriptsServer.getInstance().getScriptManager().getService();
+			final ScriptServiceInterface client =
+					ScriptsServer.getInstance().getScriptManager().getServiceBuilder().local();
 			Assert.assertNotNull(client);
 			return client;
 		}
@@ -46,8 +48,10 @@ public class ScriptsTest {
 		protected ScriptServiceInterface getClient() throws InterruptedException, URISyntaxException {
 			for (int i = 0; i < 10; i++) {
 				try {
-					ScriptServiceInterface client =
-							ScriptsServer.getInstance().getScriptManager().getClient(false, null);
+					ScriptServiceInterface client = ScriptsServer.getInstance()
+							.getScriptManager()
+							.getServiceBuilder()
+							.remote(new RemoteService("http://localhost:9091"));
 					Assert.assertNotNull(client);
 					Assert.assertTrue(client instanceof ScriptSingleClient);
 					return client;

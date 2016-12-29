@@ -16,10 +16,10 @@
 package com.qwazr.scripts;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.cluster.ClusterManager;
+import com.qwazr.cluster.ClusterServiceInterface;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.server.GenericServer;
-import com.qwazr.server.RemoteService;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LockUtils.ReadWriteLock;
 import com.qwazr.utils.StringUtils;
@@ -28,8 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +37,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 import java.util.concurrent.ExecutorService;
 
 public class ScriptManager {
@@ -51,34 +48,38 @@ public class ScriptManager {
 
 	private final ExecutorService executorService;
 	private final ScriptEngine scriptEngine;
+	private final ClusterServiceInterface clusterService;
 
+	final String myAddress;
 	final LibraryManager libraryManager;
 	final ClassLoaderManager classLoaderManager;
-	final ClusterManager clusterManager;
-	private final ScriptServiceInterface service;
+
+	private final ScriptServiceBuilder serviceBuilder;
 
 	private final File dataDir;
 
-	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
-			final ClusterManager clusterManager, final LibraryManager libraryManager, final File rootDirectory)
+	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
+			final ClassLoaderManager classLoaderManager, final LibraryManager libraryManager, final File rootDirectory)
 			throws IOException, URISyntaxException {
 		this.executorService = executorService;
 		this.classLoaderManager = classLoaderManager;
-		this.clusterManager = clusterManager;
 		this.libraryManager = libraryManager;
+		this.clusterService = clusterManager.getServiceBuilder().local();
+
+		myAddress = clusterManager.getServiceBuilder().local().getStatus().me;
 
 		final ScriptEngineManager manager = new ScriptEngineManager(classLoaderManager.getClassLoader());
 		scriptEngine = manager.getEngineByName("nashorn");
 
 		dataDir = rootDirectory;
 		runsMap = new HashMap<>();
-		service = new ScriptServiceImpl(this);
+		serviceBuilder = new ScriptServiceBuilder(new ScriptServiceImpl(this));
 	}
 
-	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
-			final ClusterManager clusterManager, final LibraryManager libraryManager,
+	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
+			final ClassLoaderManager classLoaderManager, final LibraryManager libraryManager,
 			final GenericServer.Builder builder) throws IOException, URISyntaxException {
-		this(executorService, classLoaderManager, clusterManager, libraryManager,
+		this(executorService, clusterManager, classLoaderManager, libraryManager,
 				builder.getConfiguration().dataDirectory);
 		builder.webService(ScriptServiceImpl.class);
 		builder.contextAttribute(this);
@@ -88,8 +89,13 @@ public class ScriptManager {
 		return scriptEngine;
 	}
 
-	public ScriptServiceInterface getService() {
-		return service;
+	public ScriptServiceInterface getActiveService(final String group) throws URISyntaxException {
+		return clusterService.getService(
+				clusterService.getActiveNodesByService(ScriptServiceInterface.SERVICE_NAME, group), serviceBuilder);
+	}
+
+	public ScriptServiceBuilder getServiceBuilder() {
+		return serviceBuilder;
 	}
 
 	private File getScriptFile(String scriptPath) throws ServerException {
@@ -166,30 +172,4 @@ public class ScriptManager {
 		return runsMapLock.read(() -> runsMap.get(uuid));
 	}
 
-	/**
-	 * Return a script service client
-	 *
-	 * @param local set true to require a local client. False to avoid a local client. Null to let the method decide.
-	 * @param group an optional group
-	 * @return a script service client
-	 * @throws URISyntaxException
-	 */
-	public ScriptServiceInterface getClient(final Boolean local, final String group) throws URISyntaxException {
-		if (local != null && local)
-			return service;
-		final SortedSet<String> nodes =
-				clusterManager.getNodesByGroupByService(group, ScriptServiceInterface.SERVICE_NAME);
-		if (nodes == null)
-			throw new WebApplicationException("The script service is not available");
-		if (nodes.size() == 0)
-			throw new WebApplicationException("No available script node for the group: " + group,
-					Response.Status.EXPECTATION_FAILED);
-		if (nodes.size() == 1) {
-			final String node = nodes.first();
-			if (local == null && clusterManager.getHttpAddressKey().equals(node))
-				return service;
-			return new ScriptSingleClient(new RemoteService(node));
-		}
-		return new ScriptMultiClient(RemoteService.build(nodes));
-	}
 }

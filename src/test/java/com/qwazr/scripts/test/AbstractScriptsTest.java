@@ -38,17 +38,14 @@ import java.util.function.Function;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class AbstractScriptsTest {
 
-	public static boolean serverStarted = false;
-
 	@Test
 	public void test000startServer() throws Exception {
-		if (serverStarted)
+		if (ScriptsServer.getInstance() != null)
 			return;
 		System.setProperty("QWAZR_DATA", new File("src/test").getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
 		ScriptsServer.main();
-		serverStarted = true;
 	}
 
 	private static ScriptServiceInterface client;

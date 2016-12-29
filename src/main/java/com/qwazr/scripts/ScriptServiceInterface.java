@@ -15,7 +15,7 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.cluster.TargetRuleEnum;
 import com.qwazr.server.ServiceInterface;
 import com.qwazr.server.ServiceName;
 

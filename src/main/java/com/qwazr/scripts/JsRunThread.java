@@ -33,7 +33,7 @@ class JsRunThread extends RunThreadAbstract {
 	private final File scriptFile;
 
 	JsRunThread(final ScriptManager scriptManager, final File scriptFile, final Map<String, ?> initialVariables) {
-		super(scriptManager.clusterManager.getHttpAddressKey(), scriptFile.getName(), initialVariables);
+		super(scriptManager.myAddress, scriptFile.getName(), initialVariables);
 		this.scriptEngine = scriptManager.getScriptEngine();
 
 		scriptContext = new SimpleScriptContext();

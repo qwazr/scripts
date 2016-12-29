@@ -16,20 +16,16 @@
 package com.qwazr.scripts;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.cluster.service.TargetRuleEnum;
+import com.qwazr.cluster.TargetRuleEnum;
+import com.qwazr.server.AbstractStreamingOutput;
+import com.qwazr.server.RemoteService;
+import com.qwazr.server.client.JsonClientAbstract;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
-import com.qwazr.server.AbstractStreamingOutput;
-import com.qwazr.server.client.JsonClientAbstract;
-import com.qwazr.server.RemoteService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import static com.qwazr.server.ServiceInterface.valid200202Json;
-import static com.qwazr.server.ServiceInterface.valid200Json;
-import static com.qwazr.server.ServiceInterface.valid200TextPlain;
 
 public class ScriptSingleClient extends JsonClientAbstract implements ScriptServiceInterface {
 

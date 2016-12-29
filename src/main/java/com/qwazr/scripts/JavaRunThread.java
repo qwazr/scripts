@@ -29,8 +29,8 @@ public class JavaRunThread extends RunThreadAbstract {
 	private final Class<?> scriptClass;
 	private final LibraryManager libraryManager;
 
-	JavaRunThread(ScriptManager scriptManager, String className, Map<String, ?> initialVariables) {
-		super(scriptManager.clusterManager.getHttpAddressKey(), className, initialVariables);
+	JavaRunThread(final ScriptManager scriptManager, final String className, final Map<String, ?> initialVariables) {
+		super(scriptManager.myAddress, className, initialVariables);
 		this.libraryManager = scriptManager.libraryManager;
 		try {
 			scriptClass = scriptManager.classLoaderManager.findClass(className);
