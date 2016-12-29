@@ -15,20 +15,15 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.cluster.ServiceBuilderInterface;
+import com.qwazr.cluster.ClusterManager;
+import com.qwazr.cluster.ServiceBuilderAbstract;
 import com.qwazr.server.RemoteService;
 
-public class ScriptServiceBuilder implements ServiceBuilderInterface<ScriptServiceInterface> {
+public class ScriptServiceBuilder extends ServiceBuilderAbstract<ScriptServiceInterface> {
 
-	private final ScriptServiceImpl local;
-
-	ScriptServiceBuilder(ScriptServiceImpl local) {
-		this.local = local;
-	}
-
-	@Override
-	public ScriptServiceInterface local() {
-		return local;
+	public ScriptServiceBuilder(final ClusterManager clusterManager, final ScriptManager scriptManager) {
+		super(clusterManager, ScriptServiceInterface.SERVICE_NAME,
+				scriptManager == null ? null : scriptManager.getService());
 	}
 
 	@Override

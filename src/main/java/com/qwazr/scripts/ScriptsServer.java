@@ -35,6 +35,7 @@ public class ScriptsServer implements BaseServer {
 
 	private final GenericServer server;
 	private final ScriptManager scriptManager;
+	private final ScriptServiceBuilder serviceBuilder;
 
 	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
@@ -43,12 +44,17 @@ public class ScriptsServer implements BaseServer {
 		final ClusterManager clusterManager = new ClusterManager(builder);
 		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
 		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
+		serviceBuilder = new ScriptServiceBuilder(clusterManager, scriptManager);
 		builder.webService(WelcomeShutdownService.class);
 		server = builder.build();
 	}
 
 	public ScriptManager getScriptManager() {
 		return scriptManager;
+	}
+
+	public ScriptServiceBuilder getServiceBuilder() {
+		return serviceBuilder;
 	}
 
 	@Override

@@ -17,7 +17,6 @@ package com.qwazr.scripts;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.ClusterManager;
-import com.qwazr.cluster.ClusterServiceInterface;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
@@ -48,13 +47,12 @@ public class ScriptManager {
 
 	private final ExecutorService executorService;
 	private final ScriptEngine scriptEngine;
-	private final ClusterServiceInterface clusterService;
 
 	final String myAddress;
 	final LibraryManager libraryManager;
 	final ClassLoaderManager classLoaderManager;
 
-	private final ScriptServiceBuilder serviceBuilder;
+	private final ScriptServiceInterface service;
 
 	private final File dataDir;
 
@@ -64,7 +62,6 @@ public class ScriptManager {
 		this.executorService = executorService;
 		this.classLoaderManager = classLoaderManager;
 		this.libraryManager = libraryManager;
-		this.clusterService = clusterManager.getServiceBuilder().local();
 
 		myAddress = clusterManager.getServiceBuilder().local().getStatus().me;
 
@@ -73,7 +70,7 @@ public class ScriptManager {
 
 		dataDir = rootDirectory;
 		runsMap = new HashMap<>();
-		serviceBuilder = new ScriptServiceBuilder(new ScriptServiceImpl(this));
+		service = new ScriptServiceImpl(this);
 	}
 
 	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
@@ -89,13 +86,8 @@ public class ScriptManager {
 		return scriptEngine;
 	}
 
-	public ScriptServiceInterface getActiveService(final String group) throws URISyntaxException {
-		return clusterService.getService(
-				clusterService.getActiveNodesByService(ScriptServiceInterface.SERVICE_NAME, group), serviceBuilder);
-	}
-
-	public ScriptServiceBuilder getServiceBuilder() {
-		return serviceBuilder;
+	public ScriptServiceInterface getService() {
+		return service;
 	}
 
 	private File getScriptFile(String scriptPath) throws ServerException {
