@@ -48,8 +48,8 @@ public class ScriptsTest {
 		protected ScriptServiceInterface getClient() throws InterruptedException, URISyntaxException {
 			for (int i = 0; i < 10; i++) {
 				try {
-					ScriptServiceInterface client =
-							new ScriptServiceBuilder(null, null).remote(new RemoteService("http://localhost:9091"));
+					ScriptServiceInterface client = new ScriptServiceBuilder(null, null).remote(
+							RemoteService.of("http://localhost:9091").build());
 					Assert.assertNotNull(client);
 					Assert.assertTrue(client instanceof ScriptSingleClient);
 					return client;
