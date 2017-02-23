@@ -15,7 +15,6 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.library.LibraryManager;
 import com.qwazr.server.ServerException;
 
 import javax.ws.rs.core.Response;
@@ -27,11 +26,11 @@ public class JavaRunThread extends RunThreadAbstract {
 
 	private final Map<String, Object> variables;
 	private final Class<?> scriptClass;
-	private final LibraryManager libraryManager;
+	private final ScriptManager scriptManager;
 
 	JavaRunThread(final ScriptManager scriptManager, final String className, final Map<String, ?> initialVariables) {
 		super(scriptManager.myAddress, className, initialVariables);
-		this.libraryManager = scriptManager.libraryManager;
+		this.scriptManager = scriptManager;
 		try {
 			scriptClass = scriptManager.classLoaderManager.findClass(className);
 		} catch (ClassNotFoundException e) {
@@ -45,7 +44,7 @@ public class JavaRunThread extends RunThreadAbstract {
 	@Override
 	protected void runner() throws Exception {
 		Objects.requireNonNull("Cannot create instance of " + scriptClass);
-		final Object script = libraryManager.newInstance(scriptClass);
+		final Object script = scriptManager.classLoaderManager.newInstance(scriptClass);
 		if (script instanceof ScriptInterface)
 			((ScriptInterface) script).run(variables);
 		else if (script instanceof Runnable)
