@@ -116,7 +116,7 @@ public class ScriptManager {
 			throws ServerException, IOException, ClassNotFoundException {
 		if (LOGGER.isInfoEnabled())
 			LOGGER.info("Run sync: " + scriptPath);
-		RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
+		final RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		scriptRunThread.run();
 		expireScriptRunThread();
 		return scriptRunThread;
@@ -126,7 +126,7 @@ public class ScriptManager {
 			throws ServerException, IOException, ClassNotFoundException {
 		if (LOGGER.isInfoEnabled())
 			LOGGER.info("Run async: " + scriptPath);
-		RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
+		final RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		executorService.execute(scriptRunThread);
 		expireScriptRunThread();
 		return scriptRunThread.getStatus();

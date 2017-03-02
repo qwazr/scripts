@@ -41,7 +41,7 @@ public class ScriptsServer implements BaseServer {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
 		final ClassLoaderManager classLoaderManager = new ClassLoaderManager(builder, Thread.currentThread());
-		final ClusterManager clusterManager = new ClusterManager(builder);
+		final ClusterManager clusterManager = new ClusterManager(builder, executorService);
 		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
 		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
 		serviceBuilder = new ScriptServiceBuilder(clusterManager, scriptManager);
