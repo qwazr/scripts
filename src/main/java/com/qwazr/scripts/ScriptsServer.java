@@ -17,6 +17,8 @@ package com.qwazr.scripts;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.ClusterManager;
+import com.qwazr.database.TableManager;
+import com.qwazr.database.TableServiceInterface;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
@@ -40,10 +42,21 @@ public class ScriptsServer implements BaseServer {
 	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
-		final ClassLoaderManager classLoaderManager = new ClassLoaderManager(builder, Thread.currentThread());
-		final ClusterManager clusterManager = new ClusterManager(builder, executorService);
-		final LibraryManager libraryManager = new LibraryManager(classLoaderManager, null, builder);
-		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder);
+		final ClassLoaderManager classLoaderManager =
+				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread()).registerContextAttribute(
+						builder);
+		final ClusterManager clusterManager =
+				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
+						.registerProtocolListener(builder)
+						.registerWebService(builder);
+		final TableManager tableManager = new TableManager(builder.getConfiguration().dataDirectory.toPath()
+				.resolve(TableServiceInterface.SERVICE_NAME)).registerContextAttribute(builder)
+				.registerShutdownListener(builder);
+		final LibraryManager libraryManager =
+				new LibraryManager(classLoaderManager, tableManager.getService(), configuration.dataDirectory,
+						configuration.getEtcFiles()).registerWebService(builder).registerIdentityManager(builder);
+		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager,
+				configuration.dataDirectory).registerWebService(builder);
 		serviceBuilder = new ScriptServiceBuilder(clusterManager, scriptManager);
 		builder.webService(WelcomeShutdownService.class);
 		server = builder.build();

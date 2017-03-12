@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,13 +73,15 @@ public class ScriptManager {
 		service = new ScriptServiceImpl(this);
 	}
 
-	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
-			final ClusterManager clusterManager, final LibraryManager libraryManager,
-			final GenericServer.Builder builder) throws IOException, URISyntaxException {
-		this(executorService, classLoaderManager, clusterManager, libraryManager,
-				builder.getConfiguration().dataDirectory);
+	public ScriptManager registerWebService(final GenericServer.Builder builder) {
+		registerContextAttribute(builder);
 		builder.webService(ScriptServiceImpl.class);
+		return this;
+	}
+
+	public ScriptManager registerContextAttribute(final GenericServer.Builder builder) {
 		builder.contextAttribute(this);
+		return this;
 	}
 
 	ScriptEngine getScriptEngine() {

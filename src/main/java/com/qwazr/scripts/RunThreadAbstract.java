@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  **/
 package com.qwazr.scripts;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.StringUtils;
 import org.slf4j.Logger;
@@ -50,7 +50,7 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 		this.httpAddressKey = httpAddressKey;
 		this.scriptName = scriptName;
 		this.initialVariables = initialVariables;
-		uuid = UUIDs.timeBased().toString();
+		uuid = HashUtils.newTimeBasedUUID().toString();
 		state = ScriptRunStatus.ScriptState.ready;
 		startTime = null;
 		endTime = null;
