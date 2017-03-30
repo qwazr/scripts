@@ -105,7 +105,7 @@ public class ScriptManager {
 		if (scriptPath.endsWith(".js"))
 			scriptRunThread = new JsRunThread(this, getScriptFile(scriptPath), objects);
 		else
-			scriptRunThread = new JavaRunThread(this, scriptPath, objects);
+			scriptRunThread = new JavaRunThread(this, libraryManager, scriptPath, objects);
 		addScriptRunThread(scriptRunThread);
 		return scriptRunThread;
 	}
