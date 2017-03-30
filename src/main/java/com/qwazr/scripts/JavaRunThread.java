@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.qwazr.scripts;
 
 import com.qwazr.server.ServerException;
+import com.qwazr.utils.ClassLoaderUtils;
 
 import javax.ws.rs.core.Response;
 import java.util.HashMap;
@@ -32,7 +33,7 @@ public class JavaRunThread extends RunThreadAbstract {
 		super(scriptManager.myAddress, className, initialVariables);
 		this.scriptManager = scriptManager;
 		try {
-			scriptClass = scriptManager.classLoaderManager.findClass(className);
+			scriptClass = ClassLoaderUtils.findClass(className);
 		} catch (ClassNotFoundException e) {
 			throw new ServerException(Response.Status.NOT_FOUND, "Class not found: " + className);
 		}
@@ -44,7 +45,7 @@ public class JavaRunThread extends RunThreadAbstract {
 	@Override
 	protected void runner() throws Exception {
 		Objects.requireNonNull("Cannot create instance of " + scriptClass);
-		final Object script = scriptManager.classLoaderManager.newInstance(scriptClass);
+		final Object script = scriptClass.newInstance();
 		if (script instanceof ScriptInterface)
 			((ScriptInterface) script).run(variables);
 		else if (script instanceof Runnable)

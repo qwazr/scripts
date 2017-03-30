@@ -15,7 +15,6 @@
  */
 package com.qwazr.scripts;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.database.TableManager;
 import com.qwazr.database.TableServiceInterface;
@@ -41,11 +40,7 @@ public class ScriptsServer implements BaseServer {
 
 	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
-		final ClassLoaderManager classLoaderManager =
-				new ClassLoaderManager(configuration.dataDirectory, Thread.currentThread());
-		final GenericServer.Builder builder =
-				GenericServer.of(configuration, executorService, classLoaderManager.getClassLoader());
-		classLoaderManager.registerContextAttribute(builder);
+		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
 						.registerProtocolListener(builder)
@@ -53,10 +48,9 @@ public class ScriptsServer implements BaseServer {
 		final TableManager tableManager = new TableManager(builder.getConfiguration().dataDirectory.toPath()
 				.resolve(TableServiceInterface.SERVICE_NAME)).registerContextAttribute(builder)
 				.registerShutdownListener(builder);
-		final LibraryManager libraryManager =
-				new LibraryManager(classLoaderManager, tableManager.getService(), configuration.dataDirectory,
-						configuration.getEtcFiles()).registerWebService(builder).registerIdentityManager(builder);
-		scriptManager = new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager,
+		final LibraryManager libraryManager = new LibraryManager(tableManager.getService(), configuration.dataDirectory,
+				configuration.getEtcFiles()).registerWebService(builder).registerIdentityManager(builder);
+		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
 				configuration.dataDirectory).registerWebService(builder);
 		serviceBuilder = new ScriptServiceBuilder(clusterManager, scriptManager);
 		builder.webService(WelcomeShutdownService.class);

@@ -15,7 +15,6 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.server.GenericServer;
@@ -50,22 +49,19 @@ public class ScriptManager {
 
 	final String myAddress;
 	final LibraryManager libraryManager;
-	final ClassLoaderManager classLoaderManager;
 
 	private final ScriptServiceInterface service;
 
 	private final File dataDir;
 
-	public ScriptManager(final ExecutorService executorService, final ClassLoaderManager classLoaderManager,
-			final ClusterManager clusterManager, final LibraryManager libraryManager, final File rootDirectory)
-			throws IOException, URISyntaxException {
+	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
+			final LibraryManager libraryManager, final File rootDirectory) throws IOException, URISyntaxException {
 		this.executorService = executorService;
-		this.classLoaderManager = classLoaderManager;
 		this.libraryManager = libraryManager;
 
 		myAddress = clusterManager.getServiceBuilder().local().getStatus().me;
 
-		final ScriptEngineManager manager = new ScriptEngineManager(classLoaderManager.getClassLoader());
+		final ScriptEngineManager manager = new ScriptEngineManager(Thread.currentThread().getContextClassLoader());
 		scriptEngine = manager.getEngineByName("nashorn");
 
 		dataDir = rootDirectory;
