@@ -21,6 +21,16 @@
         <url>git@github.com:qwazr/scripts.git</url>
     </scm>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.roaringbitmap</groupId>
+                <artifactId>RoaringBitmap</artifactId>
+                <version>0.6.43</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
     <dependencies>
         <dependency>
             <groupId>com.qwazr</groupId>
@@ -47,7 +57,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-shade-plugin</artifactId>
-                        <version>${shade.version}</version>
+                        <version>3.0.0</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>

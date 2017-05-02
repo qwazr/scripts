@@ -23,6 +23,7 @@ import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
+import com.qwazr.utils.reflection.InstancesSupplier;
 
 import javax.management.MBeanException;
 import javax.management.OperationsException;
@@ -43,15 +44,18 @@ public class ScriptsServer implements BaseServer {
 		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
-						.registerProtocolListener(builder)
-						.registerWebService(builder);
-		final TableManager tableManager = new TableManager(builder.getConfiguration().dataDirectory.toPath()
-				.resolve(TableServiceInterface.SERVICE_NAME)).registerContextAttribute(builder)
-				.registerShutdownListener(builder);
-		final LibraryManager libraryManager = new LibraryManager(tableManager.getService(), configuration.dataDirectory,
-				configuration.getEtcFiles()).registerWebService(builder).registerIdentityManager(builder);
-		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
-				configuration.dataDirectory).registerWebService(builder);
+																  .registerProtocolListener(builder)
+																  .registerWebService(builder);
+		final TableManager tableManager = new TableManager(
+				builder.getConfiguration().dataDirectory.toPath().resolve(TableServiceInterface.SERVICE_NAME))
+				.registerContextAttribute(builder).registerShutdownListener(builder);
+		final InstancesSupplier instancesSupplier = InstancesSupplier.withConcurrentMap();
+		instancesSupplier.registerInstance(TableServiceInterface.class, tableManager.getService());
+		final LibraryManager libraryManager =
+				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(), instancesSupplier)
+						.registerWebService(builder).registerIdentityManager(builder);
+		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager, configuration.dataDirectory)
+				.registerWebService(builder);
 		serviceBuilder = new ScriptServiceBuilder(clusterManager, scriptManager);
 		builder.webService(WelcomeShutdownService.class);
 		server = builder.build();
