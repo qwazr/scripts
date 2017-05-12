@@ -25,8 +25,7 @@ import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
 import com.qwazr.utils.reflection.InstancesSupplier;
 
-import javax.management.MBeanException;
-import javax.management.OperationsException;
+import javax.management.JMException;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -44,20 +43,20 @@ public class ScriptsServer implements BaseServer {
 		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
-																  .registerProtocolListener(builder)
-																  .registerWebService(builder);
-		final TableManager tableManager = new TableManager(
-				builder.getConfiguration().dataDirectory.toPath().resolve(TableServiceInterface.SERVICE_NAME))
-				.registerContextAttribute(builder).registerShutdownListener(builder);
+						.registerProtocolListener(builder)
+						.registerWebService(builder);
+		final TableManager tableManager = new TableManager(builder.getConfiguration().dataDirectory.toPath()
+				.resolve(TableServiceInterface.SERVICE_NAME)).registerContextAttribute(builder)
+				.registerShutdownListener(builder);
 		final InstancesSupplier instancesSupplier = InstancesSupplier.withConcurrentMap();
 		instancesSupplier.registerInstance(TableServiceInterface.class, tableManager.getService());
 		final LibraryManager libraryManager =
-				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(), instancesSupplier)
-						.registerWebService(builder).registerIdentityManager(builder);
-		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager, configuration.dataDirectory)
-				.registerWebService(builder);
+				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(),
+						instancesSupplier).registerWebService(builder).registerIdentityManager(builder);
+		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
+				configuration.dataDirectory).registerWebService(builder);
 		serviceBuilder = new ScriptServiceBuilder(clusterManager, scriptManager);
-		builder.webService(WelcomeShutdownService.class);
+		builder.singletons(new WelcomeShutdownService());
 		server = builder.build();
 	}
 
@@ -81,8 +80,8 @@ public class ScriptsServer implements BaseServer {
 	}
 
 	public static synchronized void main(final String... args)
-			throws IOException, ReflectiveOperationException, OperationsException, ServletException, MBeanException,
-			URISyntaxException, InterruptedException {
+			throws IOException, ReflectiveOperationException, ServletException, JMException, URISyntaxException,
+			InterruptedException {
 		if (INSTANCE != null)
 			shutdown();
 		INSTANCE = new ScriptsServer(new ServerConfiguration(args));

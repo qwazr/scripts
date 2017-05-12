@@ -71,7 +71,7 @@ public class ScriptManager {
 
 	public ScriptManager registerWebService(final GenericServer.Builder builder) {
 		registerContextAttribute(builder);
-		builder.webService(ScriptServiceImpl.class);
+		builder.singletons(service);
 		return this;
 	}
 
