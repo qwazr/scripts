@@ -16,11 +16,14 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.ClusterManager;
+import com.qwazr.cluster.ClusterServiceInterface;
 import com.qwazr.database.TableManager;
 import com.qwazr.database.TableServiceInterface;
 import com.qwazr.library.LibraryManager;
+import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
+import com.qwazr.server.RestApplication;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
 import com.qwazr.utils.reflection.InstancesSupplier;
@@ -29,6 +32,8 @@ import javax.management.JMException;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,10 +46,16 @@ public class ScriptsServer implements BaseServer {
 	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
+		final Set<String> services = new HashSet<>();
+		services.add(ClusterServiceInterface.SERVICE_NAME);
+		services.add(ScriptServiceInterface.SERVICE_NAME);
+		final ApplicationBuilder webServices = ApplicationBuilder.of("/*")
+				.classes(RestApplication.JSON_CLASSES)
+				.singletons(new WelcomeShutdownService());
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
-						.registerProtocolListener(builder)
-						.registerWebService(builder);
+						.registerProtocolListener(builder, services)
+						.registerWebService(webServices);
 		final TableManager tableManager = new TableManager(builder.getConfiguration().dataDirectory.toPath()
 				.resolve(TableServiceInterface.SERVICE_NAME)).registerContextAttribute(builder)
 				.registerShutdownListener(builder);
@@ -52,11 +63,13 @@ public class ScriptsServer implements BaseServer {
 		instancesSupplier.registerInstance(TableServiceInterface.class, tableManager.getService());
 		final LibraryManager libraryManager =
 				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(),
-						instancesSupplier).registerWebService(builder).registerIdentityManager(builder);
+						instancesSupplier).registerContextAttribute(builder)
+						.registerWebService(webServices)
+						.registerIdentityManager(builder);
 		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
-				configuration.dataDirectory).registerWebService(builder);
+				configuration.dataDirectory).registerContextAttribute(builder).registerWebService(webServices);
 		serviceBuilder = new ScriptServiceBuilder(clusterManager, scriptManager);
-		builder.singletons(new WelcomeShutdownService());
+		builder.getWebServiceContext().jaxrs(webServices);
 		server = builder.build();
 	}
 

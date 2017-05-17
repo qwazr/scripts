@@ -17,6 +17,7 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.library.LibraryManager;
+import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LockUtils.ReadWriteLock;
@@ -69,8 +70,7 @@ public class ScriptManager {
 		service = new ScriptServiceImpl(this);
 	}
 
-	public ScriptManager registerWebService(final GenericServer.Builder builder) {
-		registerContextAttribute(builder);
+	public ScriptManager registerWebService(final ApplicationBuilder builder) {
 		builder.singletons(service);
 		return this;
 	}
