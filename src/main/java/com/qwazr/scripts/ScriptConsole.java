@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,27 +12,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.scripts;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.qwazr.utils.LoggerUtils;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ScriptConsole implements Closeable {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleLogger.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(ConsoleLogger.class);
 
 	private PrintWriter stdError;
 
 	public ScriptConsole(final Writer errorWriter) {
-		this.stdError =
-				errorWriter == null ? null :
-						errorWriter instanceof PrintWriter ? (PrintWriter) errorWriter : new PrintWriter(errorWriter);
+		this.stdError = errorWriter == null ?
+				null :
+				errorWriter instanceof PrintWriter ? (PrintWriter) errorWriter : new PrintWriter(errorWriter);
 	}
 
 	public void log(final Object object) {
@@ -61,59 +62,36 @@ public class ScriptConsole implements Closeable {
 
 		private static final ConsoleLogger INSTANCE = new ConsoleLogger();
 
-		public void info(final Object object) {
+		private void log(Level level, Object object) {
 			if (object == null)
 				return;
-			if (!LOGGER.isInfoEnabled())
+			if (!LOGGER.isLoggable(level))
 				return;
 			if (object instanceof Throwable)
-				LOGGER.info(object.toString(), (Throwable) object);
+				LOGGER.log(level, object.toString(), (Throwable) object);
 			else
 				LOGGER.info(object.toString());
 		}
 
+		public void info(final Object object) {
+			log(Level.INFO, object);
+		}
+
 		public void warn(final Object object) {
-			if (object == null)
-				return;
-			if (!LOGGER.isWarnEnabled())
-				return;
-			if (object instanceof Throwable)
-				LOGGER.warn(object.toString(), (Throwable) object);
-			else
-				LOGGER.warn(object.toString());
+			log(Level.WARNING, object);
+
 		}
 
 		public void error(final Object object) {
-			if (object == null)
-				return;
-			if (!LOGGER.isErrorEnabled())
-				return;
-			if (object instanceof Throwable)
-				LOGGER.error(object.toString(), (Throwable) object);
-			else
-				LOGGER.error(object.toString());
+			log(Level.SEVERE, object);
 		}
 
 		public void debug(Object object) {
-			if (object == null)
-				return;
-			if (!LOGGER.isDebugEnabled())
-				return;
-			if (object instanceof Throwable)
-				LOGGER.debug(object.toString(), (Throwable) object);
-			else
-				LOGGER.debug(object.toString());
+			log(Level.FINEST, object);
 		}
 
 		public void trace(Object object) {
-			if (object == null)
-				return;
-			if (!LOGGER.isTraceEnabled())
-				return;
-			if (object instanceof Throwable)
-				LOGGER.trace(object.toString(), (Throwable) object);
-			else
-				LOGGER.trace(object.toString());
+			log(Level.FINER, object);
 		}
 
 	}

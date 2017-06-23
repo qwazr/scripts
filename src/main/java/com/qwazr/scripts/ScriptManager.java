@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.ClusterManager;
@@ -20,10 +20,9 @@ import com.qwazr.library.LibraryManager;
 import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.LockUtils.ReadWriteLock;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.qwazr.utils.concurrent.ReadWriteLock;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -37,12 +36,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.logging.Logger;
 
 public class ScriptManager {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptManager.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(ScriptManager.class);
 
-	private final ReadWriteLock runsMapLock = new ReadWriteLock();
+	private final ReadWriteLock runsMapLock = ReadWriteLock.stamped();
 	private final HashMap<String, RunThreadAbstract> runsMap;
 
 	private final ExecutorService executorService;
@@ -112,8 +112,7 @@ public class ScriptManager {
 
 	public RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects)
 			throws ServerException, IOException, ClassNotFoundException {
-		if (LOGGER.isInfoEnabled())
-			LOGGER.info("Run sync: " + scriptPath);
+		LOGGER.info(() -> "Run sync: " + scriptPath);
 		final RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		scriptRunThread.run();
 		expireScriptRunThread();
@@ -122,8 +121,7 @@ public class ScriptManager {
 
 	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects)
 			throws ServerException, IOException, ClassNotFoundException {
-		if (LOGGER.isInfoEnabled())
-			LOGGER.info("Run async: " + scriptPath);
+		LOGGER.info(() -> "Run async: " + scriptPath);
 		final RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		executorService.execute(scriptRunThread);
 		expireScriptRunThread();
@@ -145,8 +143,7 @@ public class ScriptManager {
 					uuidsToDelete.add(scriptRunThread.getUUID());
 			});
 			uuidsToDelete.forEach(runsMap::remove);
-			if (LOGGER.isInfoEnabled())
-				LOGGER.info("Expire " + uuidsToDelete.size() + " jobs");
+			LOGGER.info(() -> "Expire " + uuidsToDelete.size() + " jobs");
 		});
 	}
 

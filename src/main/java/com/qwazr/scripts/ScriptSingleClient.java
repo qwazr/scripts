@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.scripts;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -43,9 +43,8 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 
 	@Override
 	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath)
-				.setParameter("group", group)
-				.setParameter("rule", rule == null ? null : rule.name());
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath).setParameter(
+				"group", group).setParameter("rule", rule == null ? null : rule.name());
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, ListRunStatusTypeRef, valid200202Json);
 	}
@@ -55,9 +54,8 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 		if (variables == null)
 			return runScript(scriptPath, group, rule);
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath)
-				.setParameter("group", group)
-				.setParameter("rule", rule == null ? null : rule.name());
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath).setParameter(
+				"group", group).setParameter("rule", rule == null ? null : rule.name());
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, variables, null, ListRunStatusTypeRef, valid200202Json);
 	}

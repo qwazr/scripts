@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +12,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.scripts;
 
 import com.qwazr.utils.HashUtils;
 import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable {
 
-	private static final Logger logger = LoggerFactory.getLogger(RunThreadAbstract.class);
+	private static final Logger logger = LoggerUtils.getLogger(RunThreadAbstract.class);
 
 	private volatile ScriptRunStatus.ScriptState state;
 	private volatile Long startTime;
@@ -109,7 +110,7 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 		} catch (Exception e) {
 			state = ScriptRunStatus.ScriptState.error;
 			exception = e;
-			logger.error("Error on " + scriptName + " - " + e.getMessage(), e);
+			logger.log(Level.SEVERE, e, () -> "Error on " + scriptName + " - " + e.getMessage());
 		} finally {
 			endTime = System.currentTimeMillis();
 			expirationTime = endTime + 2 * 60 * 1000;

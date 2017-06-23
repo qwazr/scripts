@@ -1,5 +1,5 @@
-/**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,23 +12,28 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.TargetRuleEnum;
-import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.server.AbstractStreamingOutput;
-import com.qwazr.server.client.JsonMultiClientAbstract;
 import com.qwazr.server.RemoteService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.qwazr.server.client.JsonMultiClientAbstract;
+import com.qwazr.utils.ExceptionUtils;
+import com.qwazr.utils.LoggerUtils;
 
 import javax.ws.rs.WebApplicationException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> implements ScriptServiceInterface {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ScriptMultiClient.class);
+	private static final Logger LOGGER = LoggerUtils.getLogger(ScriptMultiClient.class);
 
 	ScriptMultiClient(RemoteService... remotes) {
 		super(new ScriptSingleClient[remotes.length], remotes);
@@ -94,7 +99,7 @@ class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> impl
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
-		TreeMap<String, ScriptRunStatus> results = new TreeMap<>();
+		final TreeMap<String, ScriptRunStatus> results = new TreeMap<>();
 		for (ScriptSingleClient client : this) {
 			try {
 				results.putAll(client.getRunsStatus());
@@ -107,10 +112,10 @@ class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> impl
 	}
 
 	@Override
-	public AbstractStreamingOutput getRunOut(final String run_id) {
+	public AbstractStreamingOutput getRunOut(final String runId) {
 		for (ScriptSingleClient client : this) {
 			try {
-				return client.getRunOut(run_id);
+				return client.getRunOut(runId);
 			} catch (WebApplicationException e) {
 				throw e;
 			}
@@ -119,10 +124,10 @@ class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> impl
 	}
 
 	@Override
-	public AbstractStreamingOutput getRunErr(final String run_id) {
-		for (ScriptSingleClient client : this) {
+	public AbstractStreamingOutput getRunErr(final String runId) {
+		for (final ScriptSingleClient client : this) {
 			try {
-				return client.getRunErr(run_id);
+				return client.getRunErr(runId);
 			} catch (WebApplicationException e) {
 				throw e;
 			}
@@ -131,12 +136,14 @@ class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> impl
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(String run_id) {
-		for (ScriptSingleClient client : this) {
+	public ScriptRunStatus getRunStatus(String runId) {
+		for (final ScriptSingleClient client : this) {
 			try {
-				return client.getRunStatus(run_id);
+				return client.getRunStatus(runId);
 			} catch (WebApplicationException e) {
-				throw e;
+				if (e.getResponse().getStatus() == 404)
+					continue;
+				LOGGER.log(Level.WARNING, e, () -> "Get RunStatus failed: " + runId + " on " + client);
 			}
 		}
 		return null;
