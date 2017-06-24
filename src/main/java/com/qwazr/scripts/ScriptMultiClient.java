@@ -18,7 +18,7 @@ package com.qwazr.scripts;
 import com.qwazr.cluster.TargetRuleEnum;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
-import com.qwazr.server.client.JsonMultiClientAbstract;
+import com.qwazr.server.client.MultiClient;
 import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.LoggerUtils;
 
@@ -27,26 +27,34 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.logging.Level;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> implements ScriptServiceInterface {
+class ScriptMultiClient extends MultiClient<ScriptSingleClient> implements ScriptServiceInterface {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(ScriptMultiClient.class);
+	private final ExecutorService executorService;
 
-	ScriptMultiClient(RemoteService... remotes) {
-		super(new ScriptSingleClient[remotes.length], remotes);
+	ScriptMultiClient(ExecutorService executorService, RemoteService... remotes) {
+		super(getClients(remotes));
+		this.executorService = executorService;
 	}
 
-	@Override
-	protected ScriptSingleClient newClient(RemoteService remote) {
-		return new ScriptSingleClient(remote);
+	private static ScriptSingleClient[] getClients(final RemoteService... remotes) {
+		if (remotes == null)
+			return null;
+		final ScriptSingleClient[] clients = new ScriptSingleClient[remotes.length];
+		int i = 0;
+		for (RemoteService remote : remotes)
+			clients[i++] = new ScriptSingleClient(remote);
+		return clients;
 	}
 
 	private List<ScriptRunStatus> runScriptRuleAll(final ExceptionUtils.Holder exceptionHolder, final String scriptPath,
 			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
-		final List<ScriptRunStatus> statusList = new ArrayList<>(size());
+		final List<ScriptRunStatus> statusList = new ArrayList<>();
 		for (ScriptSingleClient client : this) {
 			try {
 				if (variables == null)
@@ -99,54 +107,30 @@ class ScriptMultiClient extends JsonMultiClientAbstract<ScriptSingleClient> impl
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
-		final TreeMap<String, ScriptRunStatus> results = new TreeMap<>();
-		for (ScriptSingleClient client : this) {
-			try {
-				results.putAll(client.getRunsStatus());
-			} catch (WebApplicationException e) {
-				if (e.getResponse().getStatus() != 404)
-					throw e;
-			}
-		}
+		final Map<String, ScriptRunStatus> results = new ConcurrentHashMap<>();
+		forEachParallel(executorService, 1, TimeUnit.MINUTES, client -> {
+			results.putAll(client.getRunsStatus());
+			return null;
+		});
 		return results;
 	}
 
 	@Override
 	public AbstractStreamingOutput getRunOut(final String runId) {
-		for (ScriptSingleClient client : this) {
-			try {
-				return client.getRunOut(runId);
-			} catch (WebApplicationException e) {
-				throw e;
-			}
-		}
-		return null;
+		final Result<AbstractStreamingOutput> result = firstRandomSuccess(client -> client.getRunOut(runId));
+		return result == null ? null : result.result;
 	}
 
 	@Override
 	public AbstractStreamingOutput getRunErr(final String runId) {
-		for (final ScriptSingleClient client : this) {
-			try {
-				return client.getRunErr(runId);
-			} catch (WebApplicationException e) {
-				throw e;
-			}
-		}
-		return null;
+		final Result<AbstractStreamingOutput> result = firstRandomSuccess(client -> client.getRunErr(runId));
+		return result == null ? null : result.result;
 	}
 
 	@Override
 	public ScriptRunStatus getRunStatus(String runId) {
-		for (final ScriptSingleClient client : this) {
-			try {
-				return client.getRunStatus(runId);
-			} catch (WebApplicationException e) {
-				if (e.getResponse().getStatus() == 404)
-					continue;
-				LOGGER.log(Level.WARNING, e, () -> "Get RunStatus failed: " + runId + " on " + client);
-			}
-		}
-		return null;
+		final Result<ScriptRunStatus> result = firstRandomSuccess(client -> client.getRunStatus(runId));
+		return result == null ? null : result.result;
 	}
 
 }

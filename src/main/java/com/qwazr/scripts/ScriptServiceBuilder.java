@@ -1,5 +1,5 @@
-/**
- * Copyright 2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2016-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,18 +12,24 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.cluster.ServiceBuilderAbstract;
 import com.qwazr.server.RemoteService;
 
+import java.util.concurrent.ExecutorService;
+
 public class ScriptServiceBuilder extends ServiceBuilderAbstract<ScriptServiceInterface> {
 
-	public ScriptServiceBuilder(final ClusterManager clusterManager, final ScriptManager scriptManager) {
+	private final ExecutorService executor;
+
+	public ScriptServiceBuilder(final ExecutorService executor, final ClusterManager clusterManager,
+			final ScriptManager scriptManager) {
 		super(clusterManager, ScriptServiceInterface.SERVICE_NAME,
 				scriptManager == null ? null : scriptManager.getService());
+		this.executor = executor;
 	}
 
 	@Override
@@ -33,6 +39,6 @@ public class ScriptServiceBuilder extends ServiceBuilderAbstract<ScriptServiceIn
 
 	@Override
 	public ScriptServiceInterface remotes(final RemoteService[] remotes) {
-		return new ScriptMultiClient(remotes);
+		return new ScriptMultiClient(executor, remotes);
 	}
 }

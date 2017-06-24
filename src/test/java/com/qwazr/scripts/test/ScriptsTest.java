@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ public class ScriptsTest {
 		protected ScriptServiceInterface getClient() throws InterruptedException, URISyntaxException {
 			for (int i = 0; i < 10; i++) {
 				try {
-					ScriptServiceInterface client = new ScriptServiceBuilder(null, null).remote(
+					ScriptServiceInterface client = new ScriptServiceBuilder(null, null, null).remote(
 							RemoteService.of("http://localhost:9091").build());
 					Assert.assertNotNull(client);
 					Assert.assertTrue(client instanceof ScriptSingleClient);
