@@ -2,7 +2,7 @@ FROM openjdk:8-jdk-alpine
 
 MAINTAINER Emmanuel Keller
 
-ADD target/qwazr-scripts-1.2.0-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr-scripts.jar
+ADD target/qwazr-scripts-*-exec.jar /usr/share/qwazr/qwazr-scripts.jar
 
 VOLUME /var/lib/qwazr
 
