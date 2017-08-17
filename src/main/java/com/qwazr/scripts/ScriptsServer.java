@@ -52,18 +52,20 @@ public class ScriptsServer implements BaseServer {
 		final ApplicationBuilder webServices = ApplicationBuilder.of("/*")
 				.classes(RestApplication.JSON_CLASSES)
 				.singletons(new WelcomeShutdownService());
-		final ClusterManager clusterManager = new ClusterManager(executorService,
-				configuration).registerHttpClientMonitoringThread(builder)
-				.registerProtocolListener(builder, services)
-				.registerWebService(webServices);
+		final ClusterManager clusterManager =
+				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
+						.registerProtocolListener(builder, services)
+						.registerWebService(webServices);
 		final TableManager tableManager = new TableManager(builder.getConfiguration().dataDirectory.toPath()
 				.resolve(TableServiceInterface.SERVICE_NAME)).registerContextAttribute(builder)
 				.registerShutdownListener(builder);
 		final InstancesSupplier instancesSupplier = InstancesSupplier.withConcurrentMap();
 		instancesSupplier.registerInstance(TableServiceInterface.class, tableManager.getService());
-		final LibraryManager libraryManager = new LibraryManager(configuration.dataDirectory,
-				configuration.getEtcFiles(), instancesSupplier).registerContextAttribute(builder).registerWebService(
-				webServices).registerIdentityManager(builder);
+		final LibraryManager libraryManager =
+				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(),
+						instancesSupplier).registerContextAttribute(builder)
+						.registerWebService(webServices)
+						.registerIdentityManager(builder);
 		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
 				configuration.dataDirectory).registerContextAttribute(builder).registerWebService(webServices);
 		serviceBuilder = new ScriptServiceBuilder(executorService, clusterManager, scriptManager);

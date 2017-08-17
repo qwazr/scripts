@@ -29,7 +29,6 @@ import javax.script.ScriptEngineManager;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -55,12 +54,11 @@ public class ScriptManager {
 
 	private final File dataDir;
 
-	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
-			final LibraryManager libraryManager, final File rootDirectory) throws IOException, URISyntaxException {
+	public ScriptManager(final ExecutorService executorService, final String myAddress,
+			final LibraryManager libraryManager, final File rootDirectory) {
 		this.executorService = executorService;
 		this.libraryManager = libraryManager;
-
-		myAddress = clusterManager.getServiceBuilder().local().getStatus().me;
+		this.myAddress = myAddress;
 
 		final ScriptEngineManager manager = new ScriptEngineManager(Thread.currentThread().getContextClassLoader());
 		scriptEngine = manager.getEngineByName("nashorn");
@@ -68,6 +66,15 @@ public class ScriptManager {
 		dataDir = rootDirectory;
 		runsMap = new HashMap<>();
 		service = new ScriptServiceImpl(this);
+	}
+
+	public ScriptManager(final ExecutorService executorService, final File rootDirectory) {
+		this(executorService, (String) null, null, rootDirectory);
+	}
+
+	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
+			final LibraryManager libraryManager, final File rootDirectory) {
+		this(executorService, clusterManager.getServiceBuilder().local().getStatus().me, libraryManager, rootDirectory);
 	}
 
 	public ScriptManager registerWebService(final ApplicationBuilder builder) {

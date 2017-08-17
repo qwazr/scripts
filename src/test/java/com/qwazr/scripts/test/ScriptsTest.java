@@ -15,22 +15,52 @@
  */
 package com.qwazr.scripts.test;
 
+import com.qwazr.scripts.ScriptManager;
 import com.qwazr.scripts.ScriptServiceBuilder;
 import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptSingleClient;
 import com.qwazr.scripts.ScriptsServer;
 import com.qwazr.server.RemoteService;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ ScriptsTest.LocalTest.class, ScriptsTest.SingleClientTest.class })
+@Suite.SuiteClasses({ ScriptsTest.LibraryTest.class, ScriptsTest.LocalTest.class, ScriptsTest.SingleClientTest.class })
 public class ScriptsTest {
+
+	public static class LibraryTest extends AbstractScriptsTest {
+
+		static ExecutorService executor;
+
+		@BeforeClass
+		public static void setup() {
+			executor = Executors.newCachedThreadPool();
+		}
+
+		@AfterClass
+		public static void cleanup() {
+			executor.shutdown();
+		}
+
+		@Override
+		protected ScriptServiceInterface getClient() throws URISyntaxException, InterruptedException {
+			final ScriptServiceInterface client =
+					new ScriptManager(executor, Paths.get("src/test").toFile()).getService();
+			Assert.assertNotNull(client);
+			return client;
+		}
+
+	}
 
 	public static class LocalTest extends AbstractScriptsTest {
 
