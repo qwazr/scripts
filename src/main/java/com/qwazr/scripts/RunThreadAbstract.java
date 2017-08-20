@@ -23,6 +23,9 @@ import com.qwazr.utils.StringUtils;
 import java.io.Closeable;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,7 +43,7 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 	protected final String httpAddressKey;
 
 	private final String scriptName;
-	private final Map<String, ?> initialVariables;
+	private final Map<String, Object> initialBinding;
 	protected final String uuid;
 
 	protected final IOUtils.CloseableList closeables;
@@ -50,7 +53,19 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 	protected RunThreadAbstract(String httpAddressKey, String scriptName, Map<String, ?> initialVariables) {
 		this.httpAddressKey = httpAddressKey;
 		this.scriptName = scriptName;
-		this.initialVariables = initialVariables;
+		if (initialVariables != null) {
+			final Map<String, Object> initialBinding = new LinkedHashMap<>();
+			initialVariables.forEach((key, value) -> {
+				final Object val;
+				if (value instanceof String || value instanceof Number || value instanceof Date)
+					val = value;
+				else
+					val = StringUtils.EMPTY;
+				initialBinding.put(key, val);
+			});
+			this.initialBinding = Collections.unmodifiableMap(initialBinding);
+		} else
+			this.initialBinding = null;
 		uuid = HashUtils.newTimeBasedUUID().toString();
 		state = ScriptRunStatus.ScriptState.ready;
 		startTime = null;
@@ -78,8 +93,8 @@ abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable
 
 	@Override
 	final public ScriptRunStatus getStatus() {
-		return new ScriptRunStatus(httpAddressKey, scriptName, uuid, state, startTime, endTime,
-				initialVariables == null ? null : initialVariables.keySet(), exception);
+		return new ScriptRunStatus(httpAddressKey, scriptName, uuid, state, startTime, endTime, initialBinding,
+				exception);
 	}
 
 	@Override

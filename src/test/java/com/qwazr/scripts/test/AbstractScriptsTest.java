@@ -84,7 +84,7 @@ public abstract class AbstractScriptsTest {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTest", "ScriptTest");
 		final List<ScriptRunStatus> list = client.runScriptVariables(TaskScript.class.getName(), null, null, variables);
-		waitFor(list, status -> status.end != null && status.state == ScriptRunStatus.ScriptState.terminated);
+		waitFor(list, status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		Assert.assertTrue(TaskScript.EXECUTION_COUNT.get() > 0);
 	}
 
@@ -93,8 +93,8 @@ public abstract class AbstractScriptsTest {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTestJS", "ScriptTestJS");
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/test.js", null, null, variables);
-		ScriptRunStatus finalStatus =
-				waitFor(list, status -> status.end != null && status.state == ScriptRunStatus.ScriptState.terminated);
+		ScriptRunStatus finalStatus = waitFor(list,
+				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 			client.getRunOut(finalStatus.uuid).write(baos);
 			Assert.assertEquals("Hello World! ScriptTestJS", baos.toString().trim());
@@ -128,7 +128,7 @@ public abstract class AbstractScriptsTest {
 	public void test400startJSError() throws InterruptedException, URISyntaxException, IOException {
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/error.js", null, null, null);
 		final ScriptRunStatus finalStatus =
-				waitFor(list, status -> status.end != null && status.state == ScriptRunStatus.ScriptState.error);
+				waitFor(list, status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.error);
 		Assert.assertEquals("ReferenceError: \"erroneous\" is not defined in <eval> at line number 1",
 				finalStatus.error);
 	}
