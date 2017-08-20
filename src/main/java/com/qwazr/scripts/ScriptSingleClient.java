@@ -33,7 +33,7 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 	private final static String SCRIPT_PREFIX_RUN = SCRIPT_PREFIX + "run/";
 	private final static String SCRIPT_PREFIX_STATUS = SCRIPT_PREFIX + "status/";
 
-	ScriptSingleClient(final RemoteService remote) {
+	public ScriptSingleClient(final RemoteService remote) {
 		super(remote);
 	}
 
@@ -43,8 +43,9 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 
 	@Override
 	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath).setParameter(
-				"group", group).setParameter("rule", rule == null ? null : rule.name());
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath)
+				.setParameter("group", group)
+				.setParameter("rule", rule == null ? null : rule.name());
 		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
 		return executeJson(request, null, null, ListRunStatusTypeRef, valid200202Json);
 	}
@@ -54,8 +55,9 @@ public class ScriptSingleClient extends JsonClientAbstract implements ScriptServ
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 		if (variables == null)
 			return runScript(scriptPath, group, rule);
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath).setParameter(
-				"group", group).setParameter("rule", rule == null ? null : rule.name());
+		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath)
+				.setParameter("group", group)
+				.setParameter("rule", rule == null ? null : rule.name());
 		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
 		return executeJson(request, variables, null, ListRunStatusTypeRef, valid200202Json);
 	}
