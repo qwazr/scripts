@@ -22,9 +22,9 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.LoggerUtils;
 
-import javax.annotation.PostConstruct;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
@@ -35,19 +35,10 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(ScriptServiceImpl.class);
 
-	private volatile ScriptManager scriptManager;
+	private final ScriptManager scriptManager;
 
 	ScriptServiceImpl(final ScriptManager scriptManager) {
 		this.scriptManager = scriptManager;
-	}
-
-	public ScriptServiceImpl() {
-		this(null);
-	}
-
-	@PostConstruct
-	public void init() {
-		scriptManager = getContextAttribute(ScriptManager.class);
 	}
 
 	@Override
@@ -68,7 +59,7 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 	private RunThreadAbstract getRunThread(final String runId) throws ServerException {
 		final RunThreadAbstract runThread = scriptManager.getRunThread(runId);
 		if (runThread == null)
-			throw new ServerException(Status.NOT_FOUND, "No status found");
+			throw new ServerException(Status.NOT_FOUND, "Running script not found: " + runId);
 		return runThread;
 	}
 
@@ -104,6 +95,18 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
 		return scriptManager.getRunsStatus();
+	}
+
+	@Override
+	public RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects)
+			throws IOException, ClassNotFoundException {
+		return scriptManager.runSync(scriptPath, objects);
+	}
+
+	@Override
+	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects)
+			throws IOException, ClassNotFoundException {
+		return scriptManager.runAsync(scriptPath, objects);
 	}
 
 }

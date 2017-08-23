@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2016 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2017 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,12 @@
  */
 package com.qwazr.scripts.test;
 
+import com.qwazr.cluster.TargetRuleEnum;
 import com.qwazr.scripts.ScriptRunStatus;
 import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptsServer;
 import com.qwazr.utils.http.HttpClients;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -40,15 +42,13 @@ public abstract class AbstractScriptsTest {
 
 	@Test
 	public void test000startServer() throws Exception {
-		if (ScriptsServer.getInstance() != null)
-			return;
 		System.setProperty("QWAZR_DATA", new File("src/test").getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
 		ScriptsServer.main();
 	}
 
-	private static ScriptServiceInterface client;
+	static ScriptServiceInterface client;
 
 	protected abstract ScriptServiceInterface getClient() throws InterruptedException, URISyntaxException;
 
@@ -64,13 +64,10 @@ public abstract class AbstractScriptsTest {
 		Assert.assertNotNull(statusMap);
 	}
 
-	private ScriptRunStatus waitFor(List<ScriptRunStatus> list, Function<ScriptRunStatus, Boolean> function)
+	ScriptRunStatus waitFor(final String uuid, final Function<ScriptRunStatus, Boolean> function)
 			throws InterruptedException {
-		Assert.assertNotNull(list);
-		Assert.assertEquals(1, list.size());
-		String runId = list.get(0).uuid;
 		for (int i = 0; i < 10; i++) {
-			final ScriptRunStatus status = client.getRunStatus(runId);
+			final ScriptRunStatus status = client.getRunStatus(uuid);
 			if (function.apply(status))
 				return status;
 			Thread.sleep(1000);
@@ -79,13 +76,65 @@ public abstract class AbstractScriptsTest {
 		return null;
 	}
 
+	private Map<String, ScriptRunStatus> waitFor(final List<ScriptRunStatus> list,
+			final Function<ScriptRunStatus, Boolean> function) throws InterruptedException {
+		Assert.assertNotNull(list);
+		Assert.assertFalse(list.isEmpty());
+		final Map<String, ScriptRunStatus> results = new HashMap<>();
+		for (final ScriptRunStatus status : list)
+			results.put(status.uuid, waitFor(status.uuid, function));
+		return results;
+	}
+
+	private void startClassVariables(TargetRuleEnum targetRule, Map<String, String> variables)
+			throws InterruptedException {
+		final List<ScriptRunStatus> list =
+				client.runScriptVariables(TaskVariablesScript.class.getName(), null, targetRule, variables);
+		waitFor(list, status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
+		Assert.assertTrue(TaskVariablesScript.EXECUTION_COUNT.get() > 0);
+	}
+
+	private void startClass(TargetRuleEnum targetRule) throws InterruptedException {
+		final List<ScriptRunStatus> list = client.runScript(TaskNoVarScript.class.getName(), null, targetRule);
+		waitFor(list, status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
+		Assert.assertTrue(TaskNoVarScript.EXECUTION_COUNT.get() > 0);
+	}
+
 	@Test
 	public void test200startClass() throws URISyntaxException, InterruptedException {
+		startClass(null);
+		startClass(TargetRuleEnum.one);
+		startClass(TargetRuleEnum.all);
+	}
+
+	@Test
+	public void test200startClassVariables() throws URISyntaxException, InterruptedException {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTest", "ScriptTest");
-		final List<ScriptRunStatus> list = client.runScriptVariables(TaskScript.class.getName(), null, null, variables);
-		waitFor(list, status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
-		Assert.assertTrue(TaskScript.EXECUTION_COUNT.get() > 0);
+
+		startClassVariables(null, variables);
+		startClassVariables(TargetRuleEnum.one, variables);
+		startClassVariables(TargetRuleEnum.all, variables);
+	}
+
+	@Test
+	public void test250runSync() throws IOException, ClassNotFoundException {
+		try {
+			client.runSync(TaskNoVarScript.class.getName(), null);
+			Assert.fail("NotImplementedException not thrown");
+		} catch (NotImplementedException e) {
+			Assert.assertTrue(true);
+		}
+	}
+
+	@Test
+	public void test250runAsync() throws IOException, ClassNotFoundException, InterruptedException {
+		try {
+			waitFor(client.runAsync(TaskNoVarScript.class.getName(), null).uuid, status -> true);
+			Assert.fail("NotImplementedException not thrown");
+		} catch (NotImplementedException e) {
+			Assert.assertTrue(true);
+		}
 	}
 
 	@Test
@@ -93,7 +142,7 @@ public abstract class AbstractScriptsTest {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTestJS", "ScriptTestJS");
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/test.js", null, null, variables);
-		ScriptRunStatus finalStatus = waitFor(list,
+		ScriptRunStatus finalStatus = waitFor(list.get(0).uuid,
 				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 			client.getRunOut(finalStatus.uuid).write(baos);
@@ -127,8 +176,8 @@ public abstract class AbstractScriptsTest {
 	@Test
 	public void test400startJSError() throws InterruptedException, URISyntaxException, IOException {
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/error.js", null, null, null);
-		final ScriptRunStatus finalStatus =
-				waitFor(list, status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.error);
+		final ScriptRunStatus finalStatus = waitFor(list.get(0).uuid,
+				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.error);
 		Assert.assertEquals("ReferenceError: \"erroneous\" is not defined in <eval> at line number 1",
 				finalStatus.error);
 	}
@@ -140,6 +189,8 @@ public abstract class AbstractScriptsTest {
 		} catch (WebApplicationException e) {
 			if (e.getResponse().getStatus() != 404)
 				throw e;
+		} catch (Exception e) {
+			Assert.fail("Wrong Exception returned: " + e);
 		}
 	}
 

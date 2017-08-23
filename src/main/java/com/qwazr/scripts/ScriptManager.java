@@ -95,7 +95,7 @@ public class ScriptManager {
 		return service;
 	}
 
-	private File getScriptFile(String scriptPath) throws ServerException {
+	private File getScriptFile(String scriptPath) {
 		if (StringUtils.isEmpty(scriptPath))
 			throw new ServerException(Status.NOT_ACCEPTABLE, "No path given");
 		final File scriptFile = new File(dataDir, scriptPath);
@@ -107,7 +107,7 @@ public class ScriptManager {
 	}
 
 	private RunThreadAbstract getNewScriptRunThread(final String scriptPath, final Map<String, ?> objects)
-			throws ServerException, IOException, ClassNotFoundException {
+			throws IOException, ClassNotFoundException {
 		final RunThreadAbstract scriptRunThread;
 		if (scriptPath.endsWith(".js"))
 			scriptRunThread = new JsRunThread(this, getScriptFile(scriptPath), objects);
@@ -117,8 +117,7 @@ public class ScriptManager {
 		return scriptRunThread;
 	}
 
-	public RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects)
-			throws ServerException, IOException, ClassNotFoundException {
+	RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects) throws IOException, ClassNotFoundException {
 		LOGGER.info(() -> "Run sync: " + scriptPath);
 		final RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		scriptRunThread.run();
@@ -126,8 +125,8 @@ public class ScriptManager {
 		return scriptRunThread;
 	}
 
-	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects)
-			throws ServerException, IOException, ClassNotFoundException {
+	ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects)
+			throws IOException, ClassNotFoundException {
 		LOGGER.info(() -> "Run async: " + scriptPath);
 		final RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		executorService.execute(scriptRunThread);

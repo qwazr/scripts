@@ -22,6 +22,7 @@ import com.qwazr.server.client.MultiClient;
 import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.LoggerUtils;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-class ScriptMultiClient extends MultiClient<ScriptSingleClient> implements ScriptServiceInterface {
+public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implements ScriptServiceInterface {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(ScriptMultiClient.class);
 	private final ExecutorService executorService;
@@ -115,22 +116,25 @@ class ScriptMultiClient extends MultiClient<ScriptSingleClient> implements Scrip
 		return results;
 	}
 
+	private <T> T checkNotNull(final String runId, final T value) {
+		if (value == null)
+			throw new NotFoundException("Running script not found: " + runId);
+		return value;
+	}
+
 	@Override
 	public AbstractStreamingOutput getRunOut(final String runId) {
-		final Result<AbstractStreamingOutput> result = firstRandomSuccess(client -> client.getRunOut(runId));
-		return result == null ? null : result.result;
+		return checkNotNull(runId, firstRandomSuccess(client -> client.getRunOut(runId))).result;
 	}
 
 	@Override
 	public AbstractStreamingOutput getRunErr(final String runId) {
-		final Result<AbstractStreamingOutput> result = firstRandomSuccess(client -> client.getRunErr(runId));
-		return result == null ? null : result.result;
+		return checkNotNull(runId, firstRandomSuccess(client -> client.getRunErr(runId))).result;
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(String runId) {
-		final Result<ScriptRunStatus> result = firstRandomSuccess(client -> client.getRunStatus(runId));
-		return result == null ? null : result.result;
+	public ScriptRunStatus getRunStatus(final String runId) {
+		return checkNotNull(runId, firstRandomSuccess(client -> client.getRunStatus(runId))).result;
 	}
 
 }

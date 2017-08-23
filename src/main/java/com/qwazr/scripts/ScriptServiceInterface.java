@@ -16,7 +16,9 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.TargetRuleEnum;
+import com.qwazr.server.ServerException;
 import com.qwazr.server.ServiceInterface;
+import org.apache.commons.lang3.NotImplementedException;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
@@ -28,6 +30,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -69,5 +72,15 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@Path("/status/{run_id}/err")
 	@Produces(MediaType.TEXT_PLAIN)
 	StreamingOutput getRunErr(@PathParam("run_id") String run_id);
+
+	default RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects)
+			throws ServerException, IOException, ClassNotFoundException {
+		throw new NotImplementedException("runSync");
+	}
+
+	default ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects)
+			throws ServerException, IOException, ClassNotFoundException {
+		throw new NotImplementedException("runSync");
+	}
 
 }

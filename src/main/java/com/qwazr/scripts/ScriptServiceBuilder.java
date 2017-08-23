@@ -38,7 +38,7 @@ public class ScriptServiceBuilder extends ServiceBuilderAbstract<ScriptServiceIn
 	}
 
 	@Override
-	public ScriptServiceInterface remotes(final RemoteService[] remotes) {
+	public ScriptServiceInterface remotes(final RemoteService... remotes) {
 		return new ScriptMultiClient(executor, remotes);
 	}
 }
