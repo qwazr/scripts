@@ -15,10 +15,10 @@
  */
 package com.qwazr.scripts.test;
 
-import com.qwazr.cluster.TargetRuleEnum;
 import com.qwazr.scripts.ScriptRunStatus;
 import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptsServer;
+import com.qwazr.scripts.TargetRuleEnum;
 import com.qwazr.utils.http.HttpClients;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.pool.PoolStats;

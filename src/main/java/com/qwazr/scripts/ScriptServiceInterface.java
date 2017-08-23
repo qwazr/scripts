@@ -15,7 +15,6 @@
  **/
 package com.qwazr.scripts;
 
-import com.qwazr.cluster.TargetRuleEnum;
 import com.qwazr.server.ServerException;
 import com.qwazr.server.ServiceInterface;
 import org.apache.commons.lang3.NotImplementedException;

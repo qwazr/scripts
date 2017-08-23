@@ -16,7 +16,6 @@
 package com.qwazr.scripts;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.cluster.TargetRuleEnum;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClientAbstract;

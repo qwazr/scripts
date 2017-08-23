@@ -15,7 +15,6 @@
  */
 package com.qwazr.scripts;
 
-import com.qwazr.cluster.TargetRuleEnum;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.MultiClient;

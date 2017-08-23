@@ -74,7 +74,7 @@ public class ScriptManager {
 
 	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
 			final LibraryManager libraryManager, final File rootDirectory) {
-		this(executorService, clusterManager.getServiceBuilder().local().getStatus().me, libraryManager, rootDirectory);
+		this(executorService, clusterManager.getService().getStatus().me, libraryManager, rootDirectory);
 	}
 
 	public ScriptManager registerWebService(final ApplicationBuilder builder) {
