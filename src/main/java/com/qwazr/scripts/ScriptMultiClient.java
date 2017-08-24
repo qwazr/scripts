@@ -29,17 +29,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implements ScriptServiceInterface {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(ScriptMultiClient.class);
-	private final ExecutorService executorService;
 
 	ScriptMultiClient(ExecutorService executorService, RemoteService... remotes) {
-		super(getClients(remotes));
-		this.executorService = executorService;
+		super(getClients(remotes), executorService);
 	}
 
 	private static ScriptSingleClient[] getClients(final RemoteService... remotes) {
@@ -108,32 +105,30 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
 		final Map<String, ScriptRunStatus> results = new ConcurrentHashMap<>();
-		forEachParallel(executorService, 1, TimeUnit.MINUTES, client -> {
-			results.putAll(client.getRunsStatus());
-			return null;
-		});
+		forEachParallel(ScriptSingleClient::getRunsStatus, results::putAll, null, null);
 		return results;
 	}
 
-	private <T> T checkNotNull(final String runId, final T value) {
-		if (value == null)
-			throw new NotFoundException("Running script not found: " + runId);
-		return value;
+	private <T> T throwEmptyException(final String runId, final WebApplicationException exception) {
+		throw exception != null ? exception : new NotFoundException("Running script not found: " + runId);
 	}
 
 	@Override
 	public AbstractStreamingOutput getRunOut(final String runId) {
-		return checkNotNull(runId, firstRandomSuccess(client -> client.getRunOut(runId))).result;
+		return firstRandomSuccess(client -> client.getRunOut(runId), e -> e.getResponse().getStatus() == 404,
+				e -> throwEmptyException(runId, e));
 	}
 
 	@Override
 	public AbstractStreamingOutput getRunErr(final String runId) {
-		return checkNotNull(runId, firstRandomSuccess(client -> client.getRunErr(runId))).result;
+		return firstRandomSuccess(client -> client.getRunErr(runId), e -> e.getResponse().getStatus() == 404,
+				e -> throwEmptyException(runId, e));
 	}
 
 	@Override
 	public ScriptRunStatus getRunStatus(final String runId) {
-		return checkNotNull(runId, firstRandomSuccess(client -> client.getRunStatus(runId))).result;
+		return firstRandomSuccess(client -> client.getRunStatus(runId), e -> e.getResponse().getStatus() == 404,
+				e -> throwEmptyException(runId, e));
 	}
 
 }
