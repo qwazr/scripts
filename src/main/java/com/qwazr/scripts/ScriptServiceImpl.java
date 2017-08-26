@@ -67,7 +67,7 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 		try {
 			return getRunThread(runId).getStatus();
 		} catch (ServerException e) {
-			throw ServerException.getTextException(LOGGER, e);
+			throw ServerException.getJsonException(LOGGER, e);
 		}
 	}
 

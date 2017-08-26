@@ -19,21 +19,25 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.JsonClientAbstract;
+import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
 
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 public class ScriptSingleClient extends JsonClientAbstract implements ScriptServiceInterface {
+
+	final private static Logger LOGGER = LoggerUtils.getLogger(ScriptSingleClient.class);
 
 	private final static String SCRIPT_PREFIX = "/scripts/";
 	private final static String SCRIPT_PREFIX_RUN = SCRIPT_PREFIX + "run/";
 	private final static String SCRIPT_PREFIX_STATUS = SCRIPT_PREFIX + "status/";
 
 	public ScriptSingleClient(final RemoteService remote) {
-		super(remote);
+		super(remote, LOGGER);
 	}
 
 	public final static TypeReference<List<ScriptRunStatus>> ListRunStatusTypeRef =

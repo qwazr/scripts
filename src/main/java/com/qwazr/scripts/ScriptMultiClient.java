@@ -18,16 +18,16 @@ package com.qwazr.scripts;
 import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.MultiClient;
-import com.qwazr.utils.ExceptionUtils;
+import com.qwazr.server.client.MultiWebApplicationException;
+import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.LoggerUtils;
 
 import javax.ws.rs.NotFoundException;
-import javax.ws.rs.WebApplicationException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Logger;
 
@@ -49,37 +49,38 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 		return clients;
 	}
 
-	private List<ScriptRunStatus> runScriptRuleAll(final ExceptionUtils.Holder exceptionHolder, final String scriptPath,
-			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
-		final List<ScriptRunStatus> statusList = new ArrayList<>();
-		for (ScriptSingleClient client : this) {
-			try {
-				if (variables == null)
-					statusList.addAll(client.runScript(scriptPath, group, rule));
-				else
-					statusList.addAll(client.runScriptVariables(scriptPath, group, rule, variables));
-			} catch (WebApplicationException e) {
-				exceptionHolder.switchAndWarn(e);
-			}
-		}
-		exceptionHolder.thrownIfAny();
-		return statusList;
+	private FunctionUtils.FunctionEx<ScriptSingleClient, List<ScriptRunStatus>, Exception> getRunScriptAction(
+			final String scriptPath, final String group, final TargetRuleEnum rule,
+			final Map<String, String> variables) {
+		if (variables == null)
+			return c -> c.runScript(scriptPath, group, rule);
+		else
+			return c -> c.runScriptVariables(scriptPath, group, rule, variables);
+
 	}
 
-	private List<ScriptRunStatus> runScriptRuleOne(final ExceptionUtils.Holder exceptionHolder, final String scriptPath,
-			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
-		for (ScriptSingleClient client : this) {
-			try {
-				if (variables == null)
-					return client.runScript(scriptPath, group, rule);
-				else
-					return client.runScriptVariables(scriptPath, group, rule, variables);
-			} catch (WebApplicationException e) {
-				exceptionHolder.switchAndWarn(e);
-			}
-		}
-		exceptionHolder.thrownIfAny();
-		return Collections.emptyList();
+	private List<ScriptRunStatus> runScriptRuleAll(final String scriptPath, final String group,
+			final TargetRuleEnum rule, final Map<String, String> variables) {
+
+		final List<List<ScriptRunStatus>> statusList =
+				forEachParallel(getRunScriptAction(scriptPath, group, rule, variables), LOGGER);
+
+		final List<ScriptRunStatus> results = new ArrayList<>();
+		statusList.forEach(results::addAll);
+		return results;
+	}
+
+	private List<ScriptRunStatus> runScriptRuleOne(final String scriptPath, final String group,
+			final TargetRuleEnum rule, final Map<String, String> variables) {
+
+		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
+		final List<ScriptRunStatus> result =
+				firstRandomSuccess(getRunScriptAction(scriptPath, group, rule, variables), exceptions::add);
+		if (result != null)
+			return result;
+		if (exceptions.isEmpty())
+			return Collections.emptyList();
+		throw exceptions.build();
 	}
 
 	@Override
@@ -90,45 +91,53 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 	@Override
 	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group, TargetRuleEnum rule,
 			Map<String, String> variables) {
-		final ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(LOGGER);
 		if (rule == null)
 			rule = TargetRuleEnum.one;
 		switch (rule) {
 		case all:
-			return runScriptRuleAll(exceptionHolder, scriptPath, group, rule, variables);
+			return runScriptRuleAll(scriptPath, group, rule, variables);
 		default:
 		case one:
-			return runScriptRuleOne(exceptionHolder, scriptPath, group, rule, variables);
+			return runScriptRuleOne(scriptPath, group, rule, variables);
 		}
 	}
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
-		final Map<String, ScriptRunStatus> results = new ConcurrentHashMap<>();
-		forEachParallel(ScriptSingleClient::getRunsStatus, results::putAll, null, null);
-		return results;
+		final Map<String, ScriptRunStatus> finalResult = new TreeMap<>();
+		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
+		final List<Map<String, ScriptRunStatus>> results =
+				forEachParallel(ScriptSingleClient::getRunsStatus, exceptions::add);
+		results.forEach(finalResult::putAll);
+		return finalResult;
 	}
 
-	private <T> T throwEmptyException(final String runId, final WebApplicationException exception) {
-		throw exception != null ? exception : new NotFoundException("Running script not found: " + runId);
+	private <T> T checkEmptyResult(final String runId, T result,
+			final MultiWebApplicationException.Builder exceptions) {
+		if (result != null)
+			return result;
+		throw exceptions.isEmpty() ? new NotFoundException("Running script not found: " + runId) : exceptions.build();
 	}
 
 	@Override
 	public AbstractStreamingOutput getRunOut(final String runId) {
-		return firstRandomSuccess(client -> client.getRunOut(runId), e -> e.getResponse().getStatus() == 404,
-				e -> throwEmptyException(runId, e));
+		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
+		return checkEmptyResult(runId, firstRandomSuccess(client -> client.getRunOut(runId), exceptions::add),
+				exceptions);
 	}
 
 	@Override
 	public AbstractStreamingOutput getRunErr(final String runId) {
-		return firstRandomSuccess(client -> client.getRunErr(runId), e -> e.getResponse().getStatus() == 404,
-				e -> throwEmptyException(runId, e));
+		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
+		return checkEmptyResult(runId, firstRandomSuccess(client -> client.getRunErr(runId), exceptions::add),
+				exceptions);
 	}
 
 	@Override
 	public ScriptRunStatus getRunStatus(final String runId) {
-		return firstRandomSuccess(client -> client.getRunStatus(runId), e -> e.getResponse().getStatus() == 404,
-				e -> throwEmptyException(runId, e));
+		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
+		return checkEmptyResult(runId, firstRandomSuccess(client -> client.getRunStatus(runId), exceptions::add),
+				exceptions);
 	}
 
 }
