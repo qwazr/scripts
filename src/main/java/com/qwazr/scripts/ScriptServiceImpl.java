@@ -16,15 +16,14 @@
 package com.qwazr.scripts;
 
 import com.qwazr.server.AbstractServiceImpl;
-import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.ServerException;
-import com.qwazr.utils.CharsetUtils;
+import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
 
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
-import java.io.StringReader;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -72,20 +71,18 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 	}
 
 	@Override
-	public StreamingOutput getRunOut(final String runId) {
+	public InputStream getRunOut(final String runId) {
 		try {
-			return AbstractStreamingOutput.with(new StringReader(getRunThread(runId).getOut()),
-					CharsetUtils.CharsetUTF8);
+			return IOUtils.toInputStream(getRunThread(runId).getOut(), StandardCharsets.UTF_8);
 		} catch (ServerException e) {
 			throw ServerException.getTextException(LOGGER, e);
 		}
 	}
 
 	@Override
-	public StreamingOutput getRunErr(final String runId) {
+	public InputStream getRunErr(final String runId) {
 		try {
-			return AbstractStreamingOutput.with(new StringReader(getRunThread(runId).getErr()),
-					CharsetUtils.CharsetUTF8);
+			return IOUtils.toInputStream(getRunThread(runId).getErr(), StandardCharsets.UTF_8);
 		} catch (ServerException e) {
 			throw ServerException.getTextException(LOGGER, e);
 		}

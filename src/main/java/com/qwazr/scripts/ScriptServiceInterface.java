@@ -28,8 +28,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.StreamingOutput;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -65,12 +65,12 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/status/{run_id}/out")
 	@Produces(MediaType.TEXT_PLAIN)
-	StreamingOutput getRunOut(@PathParam("run_id") String run_id);
+	InputStream getRunOut(@PathParam("run_id") String run_id);
 
 	@GET
 	@Path("/status/{run_id}/err")
 	@Produces(MediaType.TEXT_PLAIN)
-	StreamingOutput getRunErr(@PathParam("run_id") String run_id);
+	InputStream getRunErr(@PathParam("run_id") String run_id);
 
 	default RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects)
 			throws ServerException, IOException, ClassNotFoundException {

@@ -15,7 +15,6 @@
  */
 package com.qwazr.scripts;
 
-import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.MultiClient;
 import com.qwazr.server.client.MultiWebApplicationException;
@@ -23,6 +22,7 @@ import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.LoggerUtils;
 
 import javax.ws.rs.NotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -120,14 +120,14 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 	}
 
 	@Override
-	public AbstractStreamingOutput getRunOut(final String runId) {
+	public InputStream getRunOut(final String runId) {
 		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
 		return checkEmptyResult(runId, firstRandomSuccess(client -> client.getRunOut(runId), exceptions::add),
 				exceptions);
 	}
 
 	@Override
-	public AbstractStreamingOutput getRunErr(final String runId) {
+	public InputStream getRunErr(final String runId) {
 		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
 		return checkEmptyResult(runId, firstRandomSuccess(client -> client.getRunErr(runId), exceptions::add),
 				exceptions);

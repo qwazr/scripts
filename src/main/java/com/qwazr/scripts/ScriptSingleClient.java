@@ -15,85 +15,83 @@
  */
 package com.qwazr.scripts;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.server.AbstractStreamingOutput;
 import com.qwazr.server.RemoteService;
-import com.qwazr.server.client.JsonClientAbstract;
-import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.UBuilder;
-import com.qwazr.utils.http.HttpRequest;
+import com.qwazr.server.client.JsonClient;
+import org.apache.commons.io.input.AutoCloseInputStream;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.logging.Logger;
 
-public class ScriptSingleClient extends JsonClientAbstract implements ScriptServiceInterface {
+public class ScriptSingleClient extends JsonClient implements ScriptServiceInterface {
 
-	final private static Logger LOGGER = LoggerUtils.getLogger(ScriptSingleClient.class);
-
-	private final static String SCRIPT_PREFIX = "/scripts/";
-	private final static String SCRIPT_PREFIX_RUN = SCRIPT_PREFIX + "run/";
-	private final static String SCRIPT_PREFIX_STATUS = SCRIPT_PREFIX + "status/";
+	private final WebTarget scriptsTarget;
+	private final WebTarget runTarget;
+	private final WebTarget statusTarget;
 
 	public ScriptSingleClient(final RemoteService remote) {
-		super(remote, LOGGER);
+		super(remote);
+		final WebTarget rootTarget = client.target(remote.serviceAddress);
+		scriptsTarget = rootTarget.path("scripts");
+		runTarget = scriptsTarget.path("run");
+		statusTarget = scriptsTarget.path("status");
 	}
 
-	public final static TypeReference<List<ScriptRunStatus>> ListRunStatusTypeRef =
-			new TypeReference<List<ScriptRunStatus>>() {
+	private final static GenericType<List<ScriptRunStatus>> listRunStatusType =
+			new GenericType<List<ScriptRunStatus>>() {
 			};
+
+	private WebTarget getRunTarget(final String scriptPath, final String group, final TargetRuleEnum rule) {
+		WebTarget target = runTarget.path(scriptPath);
+		if (group != null)
+			target = target.queryParam("group", group);
+		if (rule != null)
+			target = target.queryParam("rule", rule.name());
+		return target;
+	}
 
 	@Override
 	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath)
-				.setParameter("group", group)
-				.setParameter("rule", rule == null ? null : rule.name());
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, ListRunStatusTypeRef, valid200202Json);
+		return getRunTarget(scriptPath, group, rule).request(MediaType.APPLICATION_JSON).get(listRunStatusType);
 	}
 
 	@Override
 	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group,
 			final TargetRuleEnum rule, final Map<String, String> variables) {
-		if (variables == null)
+		if (variables == null || variables.isEmpty())
 			return runScript(scriptPath, group, rule);
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_RUN, scriptPath)
-				.setParameter("group", group)
-				.setParameter("rule", rule == null ? null : rule.name());
-		final HttpRequest request = HttpRequest.Post(uriBuilder.buildNoEx());
-		return executeJson(request, variables, null, ListRunStatusTypeRef, valid200202Json);
+		return getRunTarget(scriptPath, group, rule).request(MediaType.APPLICATION_JSON)
+				.post(Entity.json(variables), listRunStatusType);
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(final String run_id) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS, run_id);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, ScriptRunStatus.class, valid200Json);
+	public ScriptRunStatus getRunStatus(final String runId) {
+		return statusTarget.path(runId).request(MediaType.APPLICATION_JSON).get(ScriptRunStatus.class);
 	}
 
-	public final static TypeReference<TreeMap<String, ScriptRunStatus>> MapRunStatusTypeRef =
-			new TypeReference<TreeMap<String, ScriptRunStatus>>() {
+	private final static GenericType<TreeMap<String, ScriptRunStatus>> mapRunStatusType =
+			new GenericType<TreeMap<String, ScriptRunStatus>>() {
 			};
 
 	@Override
 	public Map<String, ScriptRunStatus> getRunsStatus() {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS);
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeJson(request, null, null, MapRunStatusTypeRef, valid200Json);
+		return statusTarget.request(MediaType.APPLICATION_JSON).get(mapRunStatusType);
 	}
 
 	@Override
-	public AbstractStreamingOutput getRunOut(final String run_id) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS, run_id, "/out");
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeStream(request, null, null, valid200TextPlain);
+	public InputStream getRunOut(final String runId) {
+		return new AutoCloseInputStream(
+				statusTarget.path(runId).path("out").request(MediaType.TEXT_PLAIN).get(InputStream.class));
 	}
 
 	@Override
-	public AbstractStreamingOutput getRunErr(final String run_id) {
-		final UBuilder uriBuilder = RemoteService.getNewUBuilder(remote, SCRIPT_PREFIX_STATUS, run_id, "/err");
-		final HttpRequest request = HttpRequest.Get(uriBuilder.buildNoEx());
-		return executeStream(request, null, null, valid200TextPlain);
+	public InputStream getRunErr(final String runId) {
+		return new AutoCloseInputStream(
+				statusTarget.path(runId).path("err").request(MediaType.TEXT_PLAIN).get(InputStream.class));
 	}
 }

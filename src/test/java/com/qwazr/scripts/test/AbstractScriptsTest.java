@@ -19,6 +19,7 @@ import com.qwazr.scripts.ScriptRunStatus;
 import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptsServer;
 import com.qwazr.scripts.TargetRuleEnum;
+import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.http.HttpClients;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.pool.PoolStats;
@@ -32,6 +33,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -145,11 +147,10 @@ public abstract class AbstractScriptsTest {
 		ScriptRunStatus finalStatus = waitFor(list.get(0).uuid,
 				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-			client.getRunOut(finalStatus.uuid).write(baos);
-			Assert.assertEquals("Hello World! ScriptTestJS", baos.toString().trim());
-			baos.reset();
-			client.getRunErr(finalStatus.uuid).write(baos);
-			Assert.assertEquals("World Hello! ScriptTestJS", baos.toString().trim());
+			final String scriptOut = IOUtils.toString(client.getRunOut(finalStatus.uuid), StandardCharsets.UTF_8);
+			Assert.assertEquals("Hello World! ScriptTestJS", scriptOut.trim());
+			final String scriptErr = IOUtils.toString(client.getRunErr(finalStatus.uuid), StandardCharsets.UTF_8);
+			Assert.assertEquals("World Hello! ScriptTestJS", scriptErr.trim());
 		}
 	}
 
