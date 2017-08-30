@@ -30,14 +30,12 @@ import java.util.TreeMap;
 
 public class ScriptSingleClient extends JsonClient implements ScriptServiceInterface {
 
-	private final WebTarget scriptsTarget;
 	private final WebTarget runTarget;
 	private final WebTarget statusTarget;
 
 	public ScriptSingleClient(final RemoteService remote) {
 		super(remote);
-		final WebTarget rootTarget = client.target(remote.serviceAddress);
-		scriptsTarget = rootTarget.path("scripts");
+		final WebTarget scriptsTarget = client.target(remote.serverAddress).path(ScriptServiceInterface.SERVICE_NAME);
 		runTarget = scriptsTarget.path("run");
 		statusTarget = scriptsTarget.path("status");
 	}
