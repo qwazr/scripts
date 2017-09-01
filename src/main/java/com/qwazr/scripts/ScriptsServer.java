@@ -53,8 +53,7 @@ public class ScriptsServer implements BaseServer {
 				.classes(RestApplication.JSON_CLASSES)
 				.singletons(new WelcomeShutdownService());
 		final ClusterManager clusterManager =
-				new ClusterManager(executorService, configuration).registerHttpClientMonitoringThread(builder)
-						.registerProtocolListener(builder, services)
+				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services)
 						.registerWebService(webServices);
 		final TableManager tableManager = new TableManager(builder.getConfiguration().dataDirectory.toPath()
 				.resolve(TableServiceInterface.SERVICE_NAME)).registerContextAttribute(builder)
