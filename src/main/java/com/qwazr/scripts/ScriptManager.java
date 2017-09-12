@@ -18,7 +18,7 @@ package com.qwazr.scripts;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.server.ApplicationBuilder;
-import com.qwazr.server.GenericServer;
+import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
@@ -82,7 +82,7 @@ public class ScriptManager {
 		return this;
 	}
 
-	public ScriptManager registerContextAttribute(final GenericServer.Builder builder) {
+	public ScriptManager registerContextAttribute(final GenericServerBuilder builder) {
 		builder.contextAttribute(this);
 		return this;
 	}
