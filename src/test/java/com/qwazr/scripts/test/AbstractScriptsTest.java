@@ -20,9 +20,7 @@ import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptsServer;
 import com.qwazr.scripts.TargetRuleEnum;
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.http.HttpClients;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -201,12 +199,5 @@ public abstract class AbstractScriptsTest {
 		checkNotFound(() -> client.getRunOut("dummy"));
 		checkNotFound(() -> client.getRunErr("dummy"));
 	}
-
-	@Test
-	public void test999httpClient() {
-		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
-		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
-		Assert.assertEquals(0, stats.getPending());
-		Assert.assertTrue(stats.getAvailable() >= 0);
-	}
+	
 }
