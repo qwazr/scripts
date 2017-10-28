@@ -18,8 +18,8 @@ package com.qwazr.scripts;
 import com.qwazr.server.RemoteService;
 import com.qwazr.server.client.MultiClient;
 import com.qwazr.server.client.MultiWebApplicationException;
-import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.LoggerUtils;
+import com.qwazr.utils.concurrent.FunctionEx;
 
 import javax.ws.rs.NotFoundException;
 import java.io.InputStream;
@@ -49,9 +49,8 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 		return clients;
 	}
 
-	private FunctionUtils.FunctionEx<ScriptSingleClient, List<ScriptRunStatus>, Exception> getRunScriptAction(
-			final String scriptPath, final String group, final TargetRuleEnum rule,
-			final Map<String, String> variables) {
+	private FunctionEx<ScriptSingleClient, List<ScriptRunStatus>, Exception> getRunScriptAction(final String scriptPath,
+			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
 		if (variables == null)
 			return c -> c.runScript(scriptPath, group, rule);
 		else
