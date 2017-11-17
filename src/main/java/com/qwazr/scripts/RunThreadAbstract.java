@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable {
+public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable {
 
 	private static final Logger logger = LoggerUtils.getLogger(RunThreadAbstract.class);
 
