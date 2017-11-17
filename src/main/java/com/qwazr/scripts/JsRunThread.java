@@ -35,7 +35,6 @@ class JsRunThread extends RunThreadAbstract {
 	JsRunThread(final ScriptManager scriptManager, final File scriptFile, final Map<String, ?> initialVariables) {
 		super(scriptManager.myAddress, scriptFile.getName(), initialVariables);
 		this.scriptEngine = scriptManager.getScriptEngine();
-
 		scriptContext = new SimpleScriptContext();
 		scriptContext.setBindings(new GlobalBindings(), ScriptContext.GLOBAL_SCOPE);
 
@@ -50,6 +49,7 @@ class JsRunThread extends RunThreadAbstract {
 		this.scriptFile = scriptFile;
 		scriptContext.setWriter(outputWriter);
 		scriptContext.setErrorWriter(errorWriter);
+		scriptEngine.setContext(scriptContext);
 	}
 
 	@Override
