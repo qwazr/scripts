@@ -78,7 +78,7 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 
 	@Override
 	final public void close() {
-		IOUtils.close(outputWriter, errorWriter);
+		IOUtils.closeQuietly(outputWriter, errorWriter);
 	}
 
 	@Override
