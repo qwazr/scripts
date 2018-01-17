@@ -59,7 +59,7 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test100list() throws URISyntaxException {
+	public void test100list() {
 		Map<String, ScriptRunStatus> statusMap = client.getRunsStatus();
 		Assert.assertNotNull(statusMap);
 	}
@@ -90,8 +90,13 @@ public abstract class AbstractScriptsTest {
 			throws InterruptedException {
 		final List<ScriptRunStatus> list =
 				client.runScriptVariables(TaskVariablesScript.class.getName(), null, targetRule, variables);
-		waitFor(list, status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
+		final Map<String, ScriptRunStatus> statusMap = waitFor(list,
+				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		Assert.assertTrue(TaskVariablesScript.EXECUTION_COUNT.get() > 0);
+		Assert.assertNotNull(statusMap);
+		statusMap.forEach((key, status) -> {
+			Assert.assertEquals(true, status.result);
+		});
 	}
 
 	private void startClass(TargetRuleEnum targetRule) throws InterruptedException {
@@ -101,14 +106,14 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test200startClass() throws URISyntaxException, InterruptedException {
+	public void test200startClass() throws InterruptedException {
 		startClass(null);
 		startClass(TargetRuleEnum.one);
 		startClass(TargetRuleEnum.all);
 	}
 
 	@Test
-	public void test200startClassVariables() throws URISyntaxException, InterruptedException {
+	public void test200startClassVariables() throws InterruptedException {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTest", "ScriptTest");
 
@@ -138,7 +143,7 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test200startJs() throws URISyntaxException, InterruptedException, IOException {
+	public void test200startJs() throws InterruptedException, IOException {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTestJS", "ScriptTestJS");
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/test.js", null, null, variables);
@@ -153,7 +158,7 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test300startClassNotFound() throws InterruptedException, URISyntaxException {
+	public void test300startClassNotFound() {
 		try {
 			client.runScriptVariables("dummy", null, null, null);
 			Assert.fail("Exception not thrown");
@@ -163,7 +168,7 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test300startJSNotFound() throws InterruptedException, URISyntaxException {
+	public void test300startJSNotFound() {
 		try {
 			client.runScriptVariables("dummy.js", null, null, null);
 			Assert.fail("Exception not thrown");
@@ -173,7 +178,7 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test400startJSError() throws InterruptedException, URISyntaxException, IOException {
+	public void test400startJSError() throws InterruptedException {
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/error.js", null, null, null);
 		final ScriptRunStatus finalStatus = waitFor(list.get(0).uuid,
 				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.error);
@@ -199,5 +204,5 @@ public abstract class AbstractScriptsTest {
 		checkNotFound(() -> client.getRunOut("dummy"));
 		checkNotFound(() -> client.getRunErr("dummy"));
 	}
-	
+
 }

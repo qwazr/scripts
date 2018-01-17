@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package com.qwazr.scripts;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -26,6 +27,11 @@ import java.util.List;
 import java.util.Map;
 
 @JsonInclude(Include.NON_NULL)
+@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
+		setterVisibility = JsonAutoDetect.Visibility.NONE,
+		creatorVisibility = JsonAutoDetect.Visibility.NONE,
+		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+		fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
 public class ScriptRunStatus {
 
 	public enum ScriptState {
@@ -48,6 +54,7 @@ public class ScriptRunStatus {
 	public final Date endTime;
 	public final Map<String, Object> bindings;
 	public final String error;
+	public final Boolean result;
 
 	@JsonCreator
 	ScriptRunStatus(@JsonProperty("node") String node, @JsonProperty("name") String name,
@@ -55,7 +62,7 @@ public class ScriptRunStatus {
 			@JsonProperty("_std_err") String stdErrPath, @JsonProperty("uuid") String uuid,
 			@JsonProperty("state") ScriptState state, @JsonProperty("start") Date startTime,
 			@JsonProperty("end") Date endTime, @JsonProperty("bindings") Map<String, Object> bindings,
-			@JsonProperty("error") String error) {
+			@JsonProperty("error") String error, @JsonProperty("result") Boolean result) {
 		this.node = node;
 		this.statusPath = statusPath;
 		this.stdOutPath = stdOutPath;
@@ -67,21 +74,15 @@ public class ScriptRunStatus {
 		this.endTime = endTime;
 		this.bindings = bindings;
 		this.error = error;
+		this.result = result;
 	}
 
 	ScriptRunStatus(String node, String name, String uuid, ScriptState state, Long startTime, Long endTime,
-			Map<String, Object> bindings, Exception exception) {
-		this.node = node;
-		this.startTime = startTime == null ? null : new Date(startTime);
-		this.endTime = endTime == null ? null : new Date(endTime);
-		this.bindings = bindings;
-		this.statusPath = node + "/scripts/status/" + uuid;
-		this.stdOutPath = node + "/scripts/status/" + uuid + "/out";
-		this.stdErrPath = node + "/scripts/status/" + uuid + "/err";
-		this.uuid = uuid;
-		this.name = name;
-		this.state = state;
-		this.error = exception == null ? null : exception.getMessage();
+			Map<String, Object> bindings, Exception exception, Boolean result) {
+		this(node, name, node + "/scripts/status/" + uuid, node + "/scripts/status/" + uuid + "/out",
+				node + "/scripts/status/" + uuid + "/err", uuid, state, startTime == null ? null : new Date(startTime),
+				endTime == null ? null : new Date(endTime), bindings, exception == null ? null : exception.getMessage(),
+				result);
 	}
 
 	private ScriptRunStatus(ScriptRunStatus src, Long startTime) {
@@ -96,8 +97,9 @@ public class ScriptRunStatus {
 		this.state = null;
 		this.endTime = null;
 		this.bindings = null;
+		this.result = null;
 	}
-	
+
 	public static List<ScriptRunStatus> cloneSchedulerResultList(List<ScriptRunStatus> sources, Long startTime) {
 		if (sources == null)
 			return null;

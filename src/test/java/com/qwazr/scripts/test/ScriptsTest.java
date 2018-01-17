@@ -15,8 +15,10 @@
  */
 package com.qwazr.scripts.test;
 
+import com.qwazr.scripts.RunThreadAbstract;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.scripts.ScriptMultiClient;
+import com.qwazr.scripts.ScriptRunStatus;
 import com.qwazr.scripts.ScriptServiceInterface;
 import com.qwazr.scripts.ScriptSingleClient;
 import com.qwazr.scripts.ScriptsServer;
@@ -55,13 +57,18 @@ public class ScriptsTest {
 
 		@Override
 		public void test250runSync() throws IOException, ClassNotFoundException {
-			Assert.assertNotNull(client.runSync(TaskNoVarScript.class.getName(), null));
+			final RunThreadAbstract runThread = client.runSync(TaskNoVarScript.class.getName(), null);
+			Assert.assertNotNull(runThread);
+			Assert.assertNotNull(runThread.getStatus());
+			Assert.assertNull(runThread.getException());
+			Assert.assertEquals(true, runThread.getResult());
 		}
 
 		@Override
 		public void test250runAsync() throws IOException, ClassNotFoundException, InterruptedException {
-			Assert.assertNotNull(
-					waitFor(client.runAsync(TaskNoVarScript.class.getName(), null).uuid, Objects::nonNull));
+			final ScriptRunStatus status =
+					waitFor(client.runAsync(TaskNoVarScript.class.getName(), null).uuid, Objects::nonNull);
+			Assert.assertNotNull(status);
 		}
 	}
 

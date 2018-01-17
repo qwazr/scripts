@@ -39,6 +39,7 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 	private volatile Long endTime;
 	private volatile Long expirationTime;
 	private volatile Exception exception;
+	private volatile Boolean result;
 
 	protected final String httpAddressKey;
 
@@ -87,6 +88,11 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 	}
 
 	@Override
+	final public Boolean getResult() {
+		return result;
+	}
+
+	@Override
 	final public String getUUID() {
 		return uuid;
 	}
@@ -94,7 +100,7 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 	@Override
 	final public ScriptRunStatus getStatus() {
 		return new ScriptRunStatus(httpAddressKey, scriptName, uuid, state, startTime, endTime, initialBinding,
-				exception);
+				exception, result);
 	}
 
 	@Override
@@ -120,7 +126,7 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 		state = ScriptRunStatus.ScriptState.running;
 		startTime = System.currentTimeMillis();
 		try {
-			runner();
+			result = runner();
 			state = ScriptRunStatus.ScriptState.terminated;
 		} catch (Exception e) {
 			state = ScriptRunStatus.ScriptState.error;
