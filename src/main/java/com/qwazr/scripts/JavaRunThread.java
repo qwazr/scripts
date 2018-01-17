@@ -1,5 +1,5 @@
-/**
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+/*
+ * Copyright 2015-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.scripts;
 
 import com.qwazr.library.LibraryManager;
@@ -28,13 +28,11 @@ class JavaRunThread extends RunThreadAbstract {
 
 	private final Map<String, Object> variables;
 	private final Class<?> scriptClass;
-	private final ScriptManager scriptManager;
 	private final LibraryManager libraryManager;
 
 	JavaRunThread(final ScriptManager scriptManager, final LibraryManager libraryManager, final String className,
 			final Map<String, ?> initialVariables) {
 		super(scriptManager.myAddress, className, initialVariables);
-		this.scriptManager = scriptManager;
 		this.libraryManager = libraryManager;
 		try {
 			scriptClass = ClassLoaderUtils.findClass(className);
@@ -47,17 +45,18 @@ class JavaRunThread extends RunThreadAbstract {
 	}
 
 	@Override
-	protected void runner() throws Exception {
-		Objects.requireNonNull("Cannot create instance of " + scriptClass);
+	protected boolean runner() throws Exception {
+		Objects.requireNonNull(scriptClass, "Cannot create instance of " + scriptClass);
 		final Object script = scriptClass.newInstance();
 		if (libraryManager != null)
 			libraryManager.inject(script);
 		if (script instanceof ScriptInterface)
-			((ScriptInterface) script).run(variables);
+			return ((ScriptInterface) script).run(variables);
 		else if (script instanceof Runnable)
 			((Runnable) script).run();
 		else
 			throw new IllegalAccessException("Class execution not supported: " + scriptClass);
+		return true;
 	}
 
 }

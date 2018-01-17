@@ -112,7 +112,7 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 		return errorWriter == null ? StringUtils.EMPTY : errorWriter.toString();
 	}
 
-	protected abstract void runner() throws Exception;
+	protected abstract boolean runner() throws Exception;
 
 	@Override
 	final public void run() {

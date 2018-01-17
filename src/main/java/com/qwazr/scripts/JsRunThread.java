@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2014-2018 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,9 +53,14 @@ class JsRunThread extends RunThreadAbstract {
 	}
 
 	@Override
-	protected void runner() throws IOException, ScriptException {
+	protected boolean runner() throws IOException, ScriptException {
 		try (final FileReader fileReader = new FileReader(scriptFile)) {
-			scriptEngine.eval(fileReader, scriptContext);
+			Object result = scriptEngine.eval(fileReader, scriptContext);
+			if (result == null)
+				return true;
+			if (result instanceof Boolean)
+				return (Boolean) result;
+			return true;
 		}
 	}
 
