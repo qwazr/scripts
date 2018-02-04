@@ -17,8 +17,6 @@ package com.qwazr.scripts;
 
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.cluster.ClusterServiceInterface;
-import com.qwazr.database.TableManager;
-import com.qwazr.database.TableServiceInterface;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.BaseServer;
@@ -27,7 +25,6 @@ import com.qwazr.server.GenericServerBuilder;
 import com.qwazr.server.RestApplication;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.server.configuration.ServerConfiguration;
-import com.qwazr.utils.reflection.InstancesSupplier;
 
 import javax.management.JMException;
 import javax.servlet.ServletException;
@@ -56,14 +53,9 @@ public class ScriptsServer implements BaseServer {
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services)
 						.registerWebService(webServices);
-		final TableManager tableManager = new TableManager(builder.getConfiguration().dataDirectory.toPath()
-				.resolve(TableServiceInterface.SERVICE_NAME)).registerContextAttribute(builder)
-				.registerShutdownListener(builder);
-		final InstancesSupplier instancesSupplier = InstancesSupplier.withConcurrentMap();
-		instancesSupplier.registerInstance(TableServiceInterface.class, tableManager.getService());
 		final LibraryManager libraryManager =
 				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(),
-						instancesSupplier).registerContextAttribute(builder)
+						null).registerContextAttribute(builder)
 						.registerWebService(webServices)
 						.registerIdentityManager(builder);
 		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
