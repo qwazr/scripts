@@ -13,15 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.scripts.test;
+package com.qwazr.scripts;
 
-import com.qwazr.scripts.RunThreadAbstract;
-import com.qwazr.scripts.ScriptManager;
-import com.qwazr.scripts.ScriptMultiClient;
-import com.qwazr.scripts.ScriptRunStatus;
-import com.qwazr.scripts.ScriptServiceInterface;
-import com.qwazr.scripts.ScriptSingleClient;
-import com.qwazr.scripts.ScriptsServer;
 import com.qwazr.server.RemoteService;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -49,9 +42,9 @@ public class ScriptsTest {
 
 		@Override
 		protected ScriptServiceInterface getClient() throws URISyntaxException, InterruptedException {
-			final ScriptServiceInterface client = ScriptsServer.getInstance().getScriptService();
+			final ScriptServiceInterface client = ScriptsServer.getInstance().getScriptServiceBuilder().local();
 			Assert.assertNotNull(client);
-			Assert.assertNotNull(ScriptsServer.getInstance().getScriptService());
+			Assert.assertEquals(ScriptServiceImpl.class, client.getClass());
 			return client;
 		}
 
@@ -78,7 +71,7 @@ public class ScriptsTest {
 
 		@BeforeClass
 		public static void setup() {
-			AbstractScriptsTest.client = null;
+			client = null;
 			executor = Executors.newCachedThreadPool();
 		}
 
@@ -104,9 +97,11 @@ public class ScriptsTest {
 		protected ScriptServiceInterface getClient() throws InterruptedException, URISyntaxException {
 			for (int i = 0; i < 10; i++) {
 				try {
-					final ScriptSingleClient client =
-							new ScriptSingleClient(RemoteService.of("http://localhost:9091").build());
+					final ScriptServiceInterface client = ScriptsServer.getInstance()
+							.getScriptServiceBuilder()
+							.remote(RemoteService.of("http://localhost:9091").build());
 					Assert.assertNotNull(client);
+					Assert.assertEquals(ScriptSingleClient.class, client.getClass());
 					return client;
 				} catch (WebApplicationException e) {
 					Assert.assertNotEquals(Response.Status.EXPECTATION_FAILED, e.getResponse().getStatus());
@@ -124,12 +119,12 @@ public class ScriptsTest {
 		protected ScriptServiceInterface getClient() throws InterruptedException, URISyntaxException {
 			for (int i = 0; i < 10; i++) {
 				try {
-					final ScriptMultiClient client =
-							new ScriptMultiClient(ScriptsServer.getInstance().getExecutorService(),
-									RemoteService.of("http://localhost:9091").build(),
+					final ScriptServiceInterface client = ScriptsServer.getInstance()
+							.getScriptServiceBuilder()
+							.remotes(RemoteService.of("http://localhost:9091").build(),
 									RemoteService.of("http://localhost:9091").build());
 					Assert.assertNotNull(client);
-					Assert.assertTrue(client instanceof ScriptMultiClient);
+					Assert.assertEquals(ScriptMultiClient.class, client.getClass());
 					return client;
 				} catch (WebApplicationException e) {
 					Assert.assertNotEquals(Response.Status.EXPECTATION_FAILED, e.getResponse().getStatus());

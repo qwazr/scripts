@@ -39,12 +39,10 @@ import java.util.concurrent.Executors;
 public class ScriptsServer implements BaseServer {
 
 	private final GenericServer server;
-	private final ScriptManager scriptManager;
-	private final ScriptServiceInterface scriptService;
-	private final ExecutorService executorService;
+	private final ScriptServiceBuilder scriptServiceBuilder;
 
 	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
-		executorService = Executors.newCachedThreadPool();
+		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
 		final Set<String> services = new HashSet<>();
 		services.add(ClusterServiceInterface.SERVICE_NAME);
@@ -64,19 +62,17 @@ public class ScriptsServer implements BaseServer {
 		final LibraryServiceInterface libraryService = libraryManager.getService();
 		webServices.singletons(libraryService);
 
-		scriptManager = new ScriptManager(executorService, clusterManager, libraryService, configuration.dataDirectory);
-		webServices.singletons(scriptService = scriptManager.getService());
+		final ScriptManager scriptManager =
+				new ScriptManager(executorService, clusterManager, libraryService, configuration.dataDirectory);
+		webServices.singletons(scriptManager.getService());
+		scriptServiceBuilder = new ScriptServiceBuilder(executorService, clusterManager, scriptManager);
 
 		builder.getWebServiceContext().jaxrs(webServices);
 		server = builder.build();
 	}
 
-	public ExecutorService getExecutorService() {
-		return executorService;
-	}
-
-	public ScriptServiceInterface getScriptService() {
-		return scriptService;
+	public ScriptServiceBuilder getScriptServiceBuilder() {
+		return scriptServiceBuilder;
 	}
 
 	@Override
@@ -91,8 +87,7 @@ public class ScriptsServer implements BaseServer {
 	}
 
 	public static synchronized void main(final String... args)
-			throws IOException, ReflectiveOperationException, ServletException, JMException, URISyntaxException,
-			InterruptedException {
+			throws IOException, ReflectiveOperationException, ServletException, JMException, URISyntaxException {
 		if (INSTANCE != null)
 			shutdown();
 		INSTANCE = new ScriptsServer(new ServerConfiguration(args));

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.qwazr.scripts.test;
+package com.qwazr.scripts;
 
 import com.qwazr.scripts.ScriptInterface;
 

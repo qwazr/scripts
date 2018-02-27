@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.scripts.test;
+package com.qwazr.scripts;
 
-import com.qwazr.scripts.ScriptRunStatus;
-import com.qwazr.scripts.ScriptServiceInterface;
-import com.qwazr.scripts.ScriptsServer;
-import com.qwazr.scripts.TargetRuleEnum;
 import com.qwazr.utils.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Assert;
