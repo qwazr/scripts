@@ -18,6 +18,7 @@ package com.qwazr.scripts;
 import com.qwazr.cluster.ClusterManager;
 import com.qwazr.cluster.ClusterServiceInterface;
 import com.qwazr.library.LibraryManager;
+import com.qwazr.library.LibraryServiceInterface;
 import com.qwazr.server.ApplicationBuilder;
 import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
@@ -39,38 +40,43 @@ public class ScriptsServer implements BaseServer {
 
 	private final GenericServer server;
 	private final ScriptManager scriptManager;
-	private final ScriptServiceBuilder serviceBuilder;
+	private final ScriptServiceInterface scriptService;
+	private final ExecutorService executorService;
 
 	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
-		final ExecutorService executorService = Executors.newCachedThreadPool();
+		executorService = Executors.newCachedThreadPool();
 		final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
 		final Set<String> services = new HashSet<>();
 		services.add(ClusterServiceInterface.SERVICE_NAME);
 		services.add(ScriptServiceInterface.SERVICE_NAME);
+		services.add(LibraryServiceInterface.SERVICE_NAME);
 		final ApplicationBuilder webServices = ApplicationBuilder.of("/*")
 				.classes(RestApplication.JSON_CLASSES)
 				.singletons(new WelcomeShutdownService());
+
 		final ClusterManager clusterManager =
 				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services)
 						.registerWebService(webServices);
+
 		final LibraryManager libraryManager =
-				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(),
-						null).registerContextAttribute(builder)
-						.registerWebService(webServices)
-						.registerIdentityManager(builder);
-		scriptManager = new ScriptManager(executorService, clusterManager, libraryManager,
-				configuration.dataDirectory).registerContextAttribute(builder).registerWebService(webServices);
-		serviceBuilder = new ScriptServiceBuilder(executorService, clusterManager, scriptManager);
+				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(), null);
+		builder.shutdownListener(server -> libraryManager.close());
+		final LibraryServiceInterface libraryService = libraryManager.getService();
+		webServices.singletons(libraryService);
+
+		scriptManager = new ScriptManager(executorService, clusterManager, libraryService, configuration.dataDirectory);
+		webServices.singletons(scriptService = scriptManager.getService());
+
 		builder.getWebServiceContext().jaxrs(webServices);
 		server = builder.build();
 	}
 
-	public ScriptManager getScriptManager() {
-		return scriptManager;
+	public ExecutorService getExecutorService() {
+		return executorService;
 	}
 
-	public ScriptServiceBuilder getServiceBuilder() {
-		return serviceBuilder;
+	public ScriptServiceInterface getScriptService() {
+		return scriptService;
 	}
 
 	@Override

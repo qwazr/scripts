@@ -35,7 +35,7 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(ScriptMultiClient.class);
 
-	ScriptMultiClient(ExecutorService executorService, RemoteService... remotes) {
+	public ScriptMultiClient(ExecutorService executorService, RemoteService... remotes) {
 		super(getClients(remotes), executorService);
 	}
 

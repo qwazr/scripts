@@ -42,8 +42,8 @@ class JsRunThread extends RunThreadAbstract {
 			initialVariables.forEach(
 					(key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
 
-		if (scriptManager.libraryManager != null)
-			scriptContext.setAttribute("library", scriptManager.libraryManager, ScriptContext.ENGINE_SCOPE);
+		if (scriptManager.libraryService != null)
+			scriptContext.setAttribute("library", scriptManager.libraryService, ScriptContext.ENGINE_SCOPE);
 		scriptContext.setAttribute("closeable", closeables, ScriptContext.ENGINE_SCOPE);
 
 		this.scriptFile = scriptFile;

@@ -16,9 +16,7 @@
 package com.qwazr.scripts;
 
 import com.qwazr.cluster.ClusterManager;
-import com.qwazr.library.LibraryManager;
-import com.qwazr.server.ApplicationBuilder;
-import com.qwazr.server.GenericServerBuilder;
+import com.qwazr.library.LibraryServiceInterface;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
 import com.qwazr.utils.StringUtils;
@@ -48,16 +46,16 @@ public class ScriptManager {
 	private final ScriptEngine scriptEngine;
 
 	final String myAddress;
-	final LibraryManager libraryManager;
+	final LibraryServiceInterface libraryService;
 
 	private final ScriptServiceInterface service;
 
 	private final File dataDir;
 
 	public ScriptManager(final ExecutorService executorService, final String myAddress,
-			final LibraryManager libraryManager, final File rootDirectory) {
+			final LibraryServiceInterface libraryService, final File rootDirectory) {
 		this.executorService = executorService;
-		this.libraryManager = libraryManager;
+		this.libraryService = libraryService;
 		this.myAddress = myAddress;
 
 		final ScriptEngineManager manager = new ScriptEngineManager(Thread.currentThread().getContextClassLoader());
@@ -73,18 +71,8 @@ public class ScriptManager {
 	}
 
 	public ScriptManager(final ExecutorService executorService, final ClusterManager clusterManager,
-			final LibraryManager libraryManager, final File rootDirectory) {
-		this(executorService, clusterManager.getService().getStatus().me, libraryManager, rootDirectory);
-	}
-
-	public ScriptManager registerWebService(final ApplicationBuilder builder) {
-		builder.singletons(service);
-		return this;
-	}
-
-	public ScriptManager registerContextAttribute(final GenericServerBuilder builder) {
-		builder.contextAttribute(this);
-		return this;
+			final LibraryServiceInterface libraryService, final File rootDirectory) {
+		this(executorService, clusterManager.getService().getStatus().me, libraryService, rootDirectory);
 	}
 
 	ScriptEngine getScriptEngine() {
@@ -106,13 +94,12 @@ public class ScriptManager {
 		return scriptFile;
 	}
 
-	private RunThreadAbstract getNewScriptRunThread(final String scriptPath, final Map<String, ?> objects)
-			throws IOException, ClassNotFoundException {
+	private RunThreadAbstract getNewScriptRunThread(final String scriptPath, final Map<String, ?> objects) {
 		final RunThreadAbstract scriptRunThread;
 		if (scriptPath.endsWith(".js"))
 			scriptRunThread = new JsRunThread(this, getScriptFile(scriptPath), objects);
 		else
-			scriptRunThread = new JavaRunThread(this, libraryManager, scriptPath, objects);
+			scriptRunThread = new JavaRunThread(this, libraryService, scriptPath, objects);
 		addScriptRunThread(scriptRunThread);
 		return scriptRunThread;
 	}
