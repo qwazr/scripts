@@ -30,7 +30,6 @@ import com.qwazr.server.configuration.ServerConfiguration;
 import javax.management.JMException;
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +40,7 @@ public class ScriptsServer implements BaseServer {
 	private final GenericServer server;
 	private final ScriptServiceBuilder scriptServiceBuilder;
 
-	private ScriptsServer(final ServerConfiguration configuration) throws IOException, URISyntaxException {
+	private ScriptsServer(final ServerConfiguration configuration) throws IOException {
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final GenericServerBuilder builder = GenericServer.of(configuration, executorService);
 		final Set<String> services = new HashSet<>();
@@ -53,8 +52,8 @@ public class ScriptsServer implements BaseServer {
 				.singletons(new WelcomeShutdownService());
 
 		final ClusterManager clusterManager =
-				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services)
-						.registerWebService(webServices);
+				new ClusterManager(executorService, configuration).registerProtocolListener(builder, services);
+		webServices.singletons(clusterManager.getService());
 
 		final LibraryManager libraryManager =
 				new LibraryManager(configuration.dataDirectory, configuration.getEtcFiles(), null);
@@ -87,7 +86,7 @@ public class ScriptsServer implements BaseServer {
 	}
 
 	public static synchronized void main(final String... args)
-			throws IOException, ReflectiveOperationException, ServletException, JMException, URISyntaxException {
+			throws IOException, ReflectiveOperationException, ServletException, JMException {
 		if (INSTANCE != null)
 			shutdown();
 		INSTANCE = new ScriptsServer(new ServerConfiguration(args));
