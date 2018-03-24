@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Closeable {
+public abstract class RunThreadAbstract<T> implements ScriptRunThread, Runnable, Closeable {
 
 	private static final Logger logger = LoggerUtils.getLogger(RunThreadAbstract.class);
 
@@ -39,7 +39,7 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 	private volatile Long endTime;
 	private volatile Long expirationTime;
 	private volatile Exception exception;
-	private volatile Boolean result;
+	private volatile T result;
 
 	protected final String httpAddressKey;
 
@@ -88,7 +88,7 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 	}
 
 	@Override
-	final public Boolean getResult() {
+	final public Object getResult() {
 		return result;
 	}
 
@@ -98,8 +98,8 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 	}
 
 	@Override
-	final public ScriptRunStatus getStatus() {
-		return new ScriptRunStatus(httpAddressKey, scriptName, uuid, state, startTime, endTime, initialBinding,
+	final public ScriptRunStatus<T> getStatus() {
+		return new ScriptRunStatus<>(httpAddressKey, scriptName, uuid, state, startTime, endTime, initialBinding,
 				exception, result);
 	}
 
@@ -118,7 +118,7 @@ public abstract class RunThreadAbstract implements ScriptRunThread, Runnable, Cl
 		return errorWriter == null ? StringUtils.EMPTY : errorWriter.toString();
 	}
 
-	protected abstract boolean runner() throws Exception;
+	protected abstract T runner() throws Exception;
 
 	@Override
 	final public void run() {

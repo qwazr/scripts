@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-class JsRunThread extends RunThreadAbstract {
+class JsRunThread extends RunThreadAbstract<Boolean> {
 
 	private final SimpleScriptContext scriptContext;
 	private final ScriptEngine scriptEngine;
@@ -53,7 +53,7 @@ class JsRunThread extends RunThreadAbstract {
 	}
 
 	@Override
-	protected boolean runner() throws IOException, ScriptException {
+	protected Boolean runner() throws IOException, ScriptException {
 		try (final FileReader fileReader = new FileReader(scriptFile)) {
 			Object result = scriptEngine.eval(fileReader, scriptContext);
 			if (result == null)

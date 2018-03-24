@@ -18,7 +18,7 @@ package com.qwazr.scripts;
 
 import java.util.Map;
 
-public interface ScriptInterface {
+public interface ScriptInterface<T> {
 
-	boolean run(Map<String, ?> variables) throws Exception;
+	T run(Map<String, ?> variables) throws Exception;
 }

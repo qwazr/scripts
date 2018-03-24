@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-class JavaRunThread extends RunThreadAbstract {
+class JavaRunThread extends RunThreadAbstract<Object> {
 
 	private final Map<String, Object> variables;
 	private final Class<?> scriptClass;
@@ -45,13 +45,13 @@ class JavaRunThread extends RunThreadAbstract {
 	}
 
 	@Override
-	protected boolean runner() throws Exception {
+	protected Object runner() throws Exception {
 		Objects.requireNonNull(scriptClass, "Cannot create instance of " + scriptClass);
 		final Object script = scriptClass.newInstance();
 		if (libraryService != null)
 			libraryService.inject(script);
 		if (script instanceof ScriptInterface)
-			return ((ScriptInterface) script).run(variables);
+			return ((ScriptInterface<?>) script).run(variables);
 		else if (script instanceof Runnable)
 			((Runnable) script).run();
 		else

@@ -16,17 +16,15 @@
 
 package com.qwazr.scripts;
 
-import com.qwazr.scripts.ScriptInterface;
-
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TaskVariablesScript implements ScriptInterface {
+public class TaskVariablesScript implements ScriptInterface<Boolean> {
 
 	final public static AtomicInteger EXECUTION_COUNT = new AtomicInteger(0);
 
 	@Override
-	public boolean run(Map<String, ?> variables) throws Exception {
+	public Boolean run(Map<String, ?> variables) throws Exception {
 		if (variables.get("ScriptTest") == null)
 			throw new Exception("Error");
 		EXECUTION_COUNT.incrementAndGet();

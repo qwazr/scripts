@@ -15,11 +15,11 @@
  */
 package com.qwazr.scripts;
 
-public interface ScriptRunThread {
+public interface ScriptRunThread<T> {
 
 	Exception getException();
 
-	Boolean getResult();
+	T getResult();
 
 	String getUUID();
 

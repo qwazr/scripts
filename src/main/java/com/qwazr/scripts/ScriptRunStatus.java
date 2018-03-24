@@ -32,7 +32,7 @@ import java.util.Map;
 		creatorVisibility = JsonAutoDetect.Visibility.NONE,
 		isGetterVisibility = JsonAutoDetect.Visibility.NONE,
 		fieldVisibility = JsonAutoDetect.Visibility.PUBLIC_ONLY)
-public class ScriptRunStatus {
+public class ScriptRunStatus<T> {
 
 	public enum ScriptState {
 		ready, running, terminated, error
@@ -54,7 +54,7 @@ public class ScriptRunStatus {
 	public final Date endTime;
 	public final Map<String, Object> bindings;
 	public final String error;
-	public final Boolean result;
+	public final T result;
 
 	@JsonCreator
 	ScriptRunStatus(@JsonProperty("node") String node, @JsonProperty("name") String name,
@@ -62,7 +62,7 @@ public class ScriptRunStatus {
 			@JsonProperty("_std_err") String stdErrPath, @JsonProperty("uuid") String uuid,
 			@JsonProperty("state") ScriptState state, @JsonProperty("start") Date startTime,
 			@JsonProperty("end") Date endTime, @JsonProperty("bindings") Map<String, Object> bindings,
-			@JsonProperty("error") String error, @JsonProperty("result") Boolean result) {
+			@JsonProperty("error") String error, @JsonProperty("result") T result) {
 		this.node = node;
 		this.statusPath = statusPath;
 		this.stdOutPath = stdOutPath;
@@ -78,7 +78,7 @@ public class ScriptRunStatus {
 	}
 
 	ScriptRunStatus(String node, String name, String uuid, ScriptState state, Long startTime, Long endTime,
-			Map<String, Object> bindings, Exception exception, Boolean result) {
+			Map<String, Object> bindings, Exception exception, T result) {
 		this(node, name, node + "/scripts/status/" + uuid, node + "/scripts/status/" + uuid + "/out",
 				node + "/scripts/status/" + uuid + "/err", uuid, state, startTime == null ? null : new Date(startTime),
 				endTime == null ? null : new Date(endTime), bindings, exception == null ? null : exception.getMessage(),
