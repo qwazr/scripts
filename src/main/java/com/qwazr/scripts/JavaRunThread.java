@@ -20,6 +20,7 @@ import com.qwazr.server.ServerException;
 import com.qwazr.utils.ClassLoaderUtils;
 
 import javax.ws.rs.core.Response;
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -28,6 +29,7 @@ class JavaRunThread extends RunThreadAbstract<Object> {
 
 	private final Map<String, Object> variables;
 	private final Class<?> scriptClass;
+	private final Constructor constructor;
 	private final LibraryServiceInterface libraryService;
 
 	JavaRunThread(final ScriptManager scriptManager, final LibraryServiceInterface libraryService,
@@ -36,7 +38,8 @@ class JavaRunThread extends RunThreadAbstract<Object> {
 		this.libraryService = libraryService;
 		try {
 			scriptClass = ClassLoaderUtils.findClass(className);
-		} catch (ClassNotFoundException e) {
+			constructor = scriptClass.getConstructor();
+		} catch (ClassNotFoundException | NoSuchMethodException e) {
 			throw new ServerException(Response.Status.NOT_FOUND, "Class not found: " + className);
 		}
 		variables = new HashMap<>();
@@ -47,7 +50,7 @@ class JavaRunThread extends RunThreadAbstract<Object> {
 	@Override
 	protected Object runner() throws Exception {
 		Objects.requireNonNull(scriptClass, "Cannot create instance of " + scriptClass);
-		final Object script = scriptClass.newInstance();
+		final Object script = constructor.newInstance();
 		if (libraryService != null)
 			libraryService.inject(script);
 		if (script instanceof ScriptInterface)
