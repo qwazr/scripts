@@ -20,63 +20,65 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
-import java.io.File;
-import java.io.FileReader;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
 class JsRunThread extends RunThreadAbstract<Boolean> {
 
-	private final SimpleScriptContext scriptContext;
-	private final ScriptEngine scriptEngine;
-	private final File scriptFile;
+    private final SimpleScriptContext scriptContext;
+    private final ScriptEngine scriptEngine;
+    private final Path scriptFilePath;
 
-	JsRunThread(final ScriptManager scriptManager, final File scriptFile, final Map<String, ?> initialVariables) {
-		super(scriptManager.myAddress, scriptFile.getName(), initialVariables);
-		this.scriptEngine = scriptManager.getScriptEngine();
-		scriptContext = new SimpleScriptContext();
-		scriptContext.setBindings(new GlobalBindings(), ScriptContext.GLOBAL_SCOPE);
+    JsRunThread(final ScriptManager scriptManager, final Path scriptFilePath, final Map<String, ?> initialVariables) {
+        super(scriptManager.myAddress, scriptFilePath.getFileName().toString(), initialVariables);
+        this.scriptEngine = scriptManager.getScriptEngine();
+        scriptContext = new SimpleScriptContext();
+        scriptContext.setBindings(new GlobalBindings(), ScriptContext.GLOBAL_SCOPE);
 
-		if (initialVariables != null)
-			initialVariables.forEach(
-					(key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
+        if (initialVariables != null)
+            initialVariables.forEach(
+                    (key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
 
-		if (scriptManager.libraryService != null)
-			scriptContext.setAttribute("library", scriptManager.libraryService, ScriptContext.ENGINE_SCOPE);
-		scriptContext.setAttribute("closeable", closeables, ScriptContext.ENGINE_SCOPE);
+        if (scriptManager.libraryService != null)
+            scriptContext.setAttribute("library", scriptManager.libraryService, ScriptContext.ENGINE_SCOPE);
+        scriptContext.setAttribute("closeable", closeables, ScriptContext.ENGINE_SCOPE);
 
-		this.scriptFile = scriptFile;
-		scriptContext.setWriter(outputWriter);
-		scriptContext.setErrorWriter(errorWriter);
-		scriptEngine.setContext(scriptContext);
-	}
+        this.scriptFilePath = scriptFilePath;
+        scriptContext.setWriter(outputWriter);
+        scriptContext.setErrorWriter(errorWriter);
+        scriptEngine.setContext(scriptContext);
+    }
 
-	@Override
-	protected Boolean runner() throws IOException, ScriptException {
-		try (final FileReader fileReader = new FileReader(scriptFile)) {
-			Object result = scriptEngine.eval(fileReader, scriptContext);
-			if (result == null)
-				return true;
-			if (result instanceof Boolean)
-				return (Boolean) result;
-			return true;
-		}
-	}
+    @Override
+    protected Boolean runner() throws IOException, ScriptException {
+        try (final BufferedReader reader = Files.newBufferedReader(scriptFilePath, StandardCharsets.UTF_8)) {
+            Object result = scriptEngine.eval(reader, scriptContext);
+            if (result == null)
+                return true;
+            if (result instanceof Boolean)
+                return (Boolean) result;
+            return true;
+        }
+    }
 
-	public class GlobalBindings extends HashMap<String, Object> implements Bindings {
+    public class GlobalBindings extends HashMap<String, Object> implements Bindings {
 
-		/**
-		 *
-		 */
-		private static final long serialVersionUID = -7250097260119419346L;
+        /**
+         *
+         */
+        private static final long serialVersionUID = -7250097260119419346L;
 
-		private GlobalBindings() {
-			this.put("console", closeables.add(new ScriptConsole(errorWriter)));
-		}
+        private GlobalBindings() {
+            this.put("console", closeables.add(new ScriptConsole(errorWriter)));
+        }
 
-		public void sleep(int msTimeout) throws InterruptedException {
-			Thread.sleep(msTimeout);
-		}
-	}
+        public void sleep(int msTimeout) throws InterruptedException {
+            Thread.sleep(msTimeout);
+        }
+    }
 }
