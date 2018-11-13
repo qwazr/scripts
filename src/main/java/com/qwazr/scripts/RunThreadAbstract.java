@@ -123,7 +123,7 @@ public abstract class RunThreadAbstract<T> implements ScriptRunThread, Runnable,
 	@Override
 	final public void run() {
 		logger.info("Execute: " + scriptName);
-		state = ScriptRunStatus.Script	State.running;
+		state = ScriptRunStatus.ScriptState.running;
 		startTime = System.currentTimeMillis();
 		try {
 			result = runner();
