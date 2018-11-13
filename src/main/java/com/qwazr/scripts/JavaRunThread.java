@@ -32,9 +32,9 @@ class JavaRunThread extends RunThreadAbstract<Object> {
 	private final Constructor constructor;
 	private final LibraryServiceInterface libraryService;
 
-	JavaRunThread(final ScriptManager scriptManager, final LibraryServiceInterface libraryService,
-			final String className, final Map<String, ?> initialVariables) {
-		super(scriptManager.myAddress, className, initialVariables);
+	JavaRunThread(final String myAddress, final LibraryServiceInterface libraryService, final String className,
+			final Map<String, ?> initialVariables) {
+		super(myAddress, className, initialVariables);
 		this.libraryService = libraryService;
 		try {
 			scriptClass = ClassLoaderUtils.findClass(className);

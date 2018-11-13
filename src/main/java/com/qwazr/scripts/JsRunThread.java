@@ -15,6 +15,8 @@
  */
 package com.qwazr.scripts;
 
+import com.qwazr.library.LibraryServiceInterface;
+
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -27,58 +29,65 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 class JsRunThread extends RunThreadAbstract<Boolean> {
 
-    private final SimpleScriptContext scriptContext;
-    private final ScriptEngine scriptEngine;
-    private final Path scriptFilePath;
+	private final SimpleScriptContext scriptContext;
+	private final ScriptEngine scriptEngine;
+	private final Path scriptFilePath;
 
-    JsRunThread(final ScriptManager scriptManager, final Path scriptFilePath, final Map<String, ?> initialVariables) {
-        super(scriptManager.myAddress, scriptFilePath.getFileName().toString(), initialVariables);
-        this.scriptEngine = scriptManager.getScriptEngine();
-        scriptContext = new SimpleScriptContext();
-        scriptContext.setBindings(new GlobalBindings(), ScriptContext.GLOBAL_SCOPE);
+	JsRunThread(final String myAddress, final ScriptEngine scriptEngine, final LibraryServiceInterface libraryService,
+			final Path scriptFilePath, final Map<String, ?> initialVariables) {
+		super(myAddress, getScriptFilePath(scriptFilePath), initialVariables);
+		this.scriptEngine = scriptEngine;
+		scriptContext = new SimpleScriptContext();
+		scriptContext.setBindings(new GlobalBindings(), ScriptContext.GLOBAL_SCOPE);
 
-        if (initialVariables != null)
-            initialVariables.forEach(
-                    (key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
+		if (initialVariables != null)
+			initialVariables.forEach(
+					(key, value) -> scriptContext.setAttribute(key, value, ScriptContext.ENGINE_SCOPE));
 
-        if (scriptManager.libraryService != null)
-            scriptContext.setAttribute("library", scriptManager.libraryService, ScriptContext.ENGINE_SCOPE);
-        scriptContext.setAttribute("closeable", closeables, ScriptContext.ENGINE_SCOPE);
+		if (libraryService != null)
+			scriptContext.setAttribute("library", libraryService, ScriptContext.ENGINE_SCOPE);
+		scriptContext.setAttribute("closeable", closeables, ScriptContext.ENGINE_SCOPE);
 
-        this.scriptFilePath = scriptFilePath;
-        scriptContext.setWriter(outputWriter);
-        scriptContext.setErrorWriter(errorWriter);
-        scriptEngine.setContext(scriptContext);
-    }
+		this.scriptFilePath = scriptFilePath;
+		scriptContext.setWriter(outputWriter);
+		scriptContext.setErrorWriter(errorWriter);
+		scriptEngine.setContext(scriptContext);
+	}
 
-    @Override
-    protected Boolean runner() throws IOException, ScriptException {
-        try (final BufferedReader reader = Files.newBufferedReader(scriptFilePath, StandardCharsets.UTF_8)) {
-            Object result = scriptEngine.eval(reader, scriptContext);
-            if (result == null)
-                return true;
-            if (result instanceof Boolean)
-                return (Boolean) result;
-            return true;
-        }
-    }
+	private static String getScriptFilePath(final Path scriptFilePath) {
+		final Path fileName = Objects.requireNonNull(scriptFilePath, "The scriptFilePath is null").getFileName();
+		return fileName == null ? null : fileName.toString();
+	}
 
-    public class GlobalBindings extends HashMap<String, Object> implements Bindings {
+	@Override
+	protected Boolean runner() throws IOException, ScriptException {
+		try (final BufferedReader reader = Files.newBufferedReader(scriptFilePath, StandardCharsets.UTF_8)) {
+			Object result = scriptEngine.eval(reader, scriptContext);
+			if (result == null)
+				return true;
+			if (result instanceof Boolean)
+				return (Boolean) result;
+			return true;
+		}
+	}
 
-        /**
-         *
-         */
-        private static final long serialVersionUID = -7250097260119419346L;
+	public class GlobalBindings extends HashMap<String, Object> implements Bindings {
 
-        private GlobalBindings() {
-            this.put("console", closeables.add(new ScriptConsole(errorWriter)));
-        }
+		/**
+		 *
+		 */
+		private static final long serialVersionUID = -7250097260119419346L;
 
-        public void sleep(int msTimeout) throws InterruptedException {
-            Thread.sleep(msTimeout);
-        }
-    }
+		private GlobalBindings() {
+			this.put("console", closeables.add(new ScriptConsole(errorWriter)));
+		}
+
+		public void sleep(int msTimeout) throws InterruptedException {
+			Thread.sleep(msTimeout);
+		}
+	}
 }
