@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @JsonInclude(Include.NON_NULL)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -77,6 +78,26 @@ public class ScriptRunStatus<T> {
 		this.result = result;
 	}
 
+	public String getUuid() {
+		return uuid;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Date getStartTime() {
+		return startTime;
+	}
+
+	public Date getEndTime() {
+		return endTime;
+	}
+
+	public ScriptState getState() {
+		return state;
+	}
+
 	ScriptRunStatus(String node, String name, String uuid, ScriptState state, Long startTime, Long endTime,
 			Map<String, Object> bindings, Exception exception, T result) {
 		this(node, name, node + "/scripts/status/" + uuid, node + "/scripts/status/" + uuid + "/out",
@@ -106,5 +127,25 @@ public class ScriptRunStatus<T> {
 		final List<ScriptRunStatus> list = new ArrayList<ScriptRunStatus>(sources.size());
 		sources.forEach(scriptRunStatus -> list.add(new ScriptRunStatus(scriptRunStatus, startTime)));
 		return list;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (!(other instanceof ScriptRunStatus))
+			return false;
+		if (other == this)
+			return true;
+		final ScriptRunStatus<T> o = (ScriptRunStatus<T>) other;
+		return Objects.equals(node, o.node) && Objects.equals(name, o.name) && Objects.equals(uuid, o.uuid) &&
+				Objects.equals(startTime, o.startTime) && Objects.equals(error, o.error) &&
+				Objects.equals(statusPath, o.statusPath) && Objects.equals(stdOutPath, o.stdOutPath) &&
+				Objects.equals(stdErrPath, o.stdErrPath) && Objects.equals(state, o.state) &&
+				Objects.equals(endTime, o.endTime) && Objects.equals(bindings, o.bindings) &&
+				Objects.equals(result, o.result);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(node, name, uuid, startTime, error, endTime);
 	}
 }

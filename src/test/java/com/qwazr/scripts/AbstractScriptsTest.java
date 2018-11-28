@@ -131,7 +131,7 @@ public abstract class AbstractScriptsTest {
 	@Test
 	public void test250runAsync() throws IOException, ClassNotFoundException, InterruptedException {
 		try {
-			waitFor(client.runAsync(TaskNoVarScript.class.getName(), null).uuid, status -> true);
+			waitFor(client.runAsync(TaskNoVarScript.class.getName(), null).getUuid(), status -> true);
 			Assert.fail("NotImplementedException not thrown");
 		} catch (NotImplementedException e) {
 			Assert.assertTrue(true);
@@ -143,12 +143,12 @@ public abstract class AbstractScriptsTest {
 		Map<String, String> variables = new HashMap<>();
 		variables.put("ScriptTestJS", "ScriptTestJS");
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/test.js", null, null, variables);
-		ScriptRunStatus finalStatus = waitFor(list.get(0).uuid,
-				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
+		ScriptRunStatus finalStatus = waitFor(list.get(0).getUuid(),
+				status -> status.getEndTime() != null && status.getState() == ScriptRunStatus.ScriptState.terminated);
 		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-			final String scriptOut = IOUtils.toString(client.getRunOut(finalStatus.uuid), StandardCharsets.UTF_8);
+			final String scriptOut = IOUtils.toString(client.getRunOut(finalStatus.getUuid()), StandardCharsets.UTF_8);
 			Assert.assertEquals("Hello World! ScriptTestJS", scriptOut.trim());
-			final String scriptErr = IOUtils.toString(client.getRunErr(finalStatus.uuid), StandardCharsets.UTF_8);
+			final String scriptErr = IOUtils.toString(client.getRunErr(finalStatus.getUuid()), StandardCharsets.UTF_8);
 			Assert.assertEquals("World Hello! ScriptTestJS", scriptErr.trim());
 		}
 	}
