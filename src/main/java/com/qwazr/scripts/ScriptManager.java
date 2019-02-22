@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -59,12 +60,19 @@ public class ScriptManager {
 		this.executorService = executorService;
 		this.libraryService = libraryService;
 		this.myAddress = myAddress;
+		this.scriptEngine = Objects.requireNonNull(initScriptEngine(), "No javascript engine found");
+		LOGGER.info("Init scriptEngine: " + scriptEngine);
+		this.pathResolver = rootDirectory == null ? Paths::get : rootDirectory::resolve;
+		this.runsMap = new HashMap<>();
+		this.service = new ScriptServiceImpl(this);
+	}
 
+	private static ScriptEngine initScriptEngine() {
 		final ScriptEngineManager manager = new ScriptEngineManager(Thread.currentThread().getContextClassLoader());
-		scriptEngine = manager.getEngineByName("nashorn");
-		pathResolver = rootDirectory == null ? Paths::get : rootDirectory::resolve;
-		runsMap = new HashMap<>();
-		service = new ScriptServiceImpl(this);
+		ScriptEngine scriptEngine = manager.getEngineByName("graal.js");
+		if (scriptEngine != null)
+			return scriptEngine;
+		return manager.getEngineByName("nashorn");
 	}
 
 	public ScriptManager(final ExecutorService executorService, final Path rootDirectory) {

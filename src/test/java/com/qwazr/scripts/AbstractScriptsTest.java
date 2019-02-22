@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import javax.ws.rs.WebApplicationException;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -32,6 +31,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class AbstractScriptsTest {
@@ -140,17 +142,14 @@ public abstract class AbstractScriptsTest {
 
 	@Test
 	public void test200startJs() throws InterruptedException, IOException {
-		Map<String, String> variables = new HashMap<>();
-		variables.put("ScriptTestJS", "ScriptTestJS");
+		final Map<String, String> variables = Map.of("ScriptTestJS", "ScriptTestJS");
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/test.js", null, null, variables);
 		ScriptRunStatus finalStatus = waitFor(list.get(0).getUuid(),
 				status -> status.getEndTime() != null && status.getState() == ScriptRunStatus.ScriptState.terminated);
-		try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-			final String scriptOut = IOUtils.toString(client.getRunOut(finalStatus.getUuid()), StandardCharsets.UTF_8);
-			Assert.assertEquals("Hello World! ScriptTestJS", scriptOut.trim());
-			final String scriptErr = IOUtils.toString(client.getRunErr(finalStatus.getUuid()), StandardCharsets.UTF_8);
-			Assert.assertEquals("World Hello! ScriptTestJS", scriptErr.trim());
-		}
+		final String scriptOut = IOUtils.toString(client.getRunOut(finalStatus.getUuid()), StandardCharsets.UTF_8);
+		assertThat("Hello World! ScriptTestJS\nLOG", equalTo(scriptOut.trim()));
+		final String scriptErr = IOUtils.toString(client.getRunErr(finalStatus.getUuid()), StandardCharsets.UTF_8);
+		assertThat("World Hello! ScriptTestJS", equalTo(scriptErr.trim()));
 	}
 
 	@Test
@@ -178,7 +177,7 @@ public abstract class AbstractScriptsTest {
 		final List<ScriptRunStatus> list = client.runScriptVariables("js/error.js", null, null, null);
 		final ScriptRunStatus finalStatus = waitFor(list.get(0).uuid,
 				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.error);
-		Assert.assertEquals("ReferenceError: \"erroneous\" is not defined in <eval> at line number 1",
+		Assert.assertEquals("org.graalvm.polyglot.PolyglotException: ReferenceError: erroneous is not defined",
 				finalStatus.error);
 	}
 
