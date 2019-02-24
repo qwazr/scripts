@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2019 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
+import org.graalvm.polyglot.Value;
 
 import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -48,7 +49,7 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group,
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 		try {
-			return Arrays.asList(scriptManager.runAsync(scriptPath, variables));
+			return Collections.singletonList(scriptManager.runAsync(scriptPath, variables));
 		} catch (Exception e) {
 			throw ServerException.getJsonException(LOGGER, e);
 		}
@@ -94,15 +95,18 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 	}
 
 	@Override
-	public RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects)
-			throws IOException, ClassNotFoundException {
+	public RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects) {
 		return scriptManager.runSync(scriptPath, objects);
 	}
 
 	@Override
-	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects)
-			throws IOException, ClassNotFoundException {
+	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects) {
 		return scriptManager.runAsync(scriptPath, objects);
+	}
+
+	@Override
+	public <T> T jsonStringify(final Value value, final Class<T> valueClass) throws IOException {
+		return scriptManager.jsonStringify(value, valueClass);
 	}
 
 }

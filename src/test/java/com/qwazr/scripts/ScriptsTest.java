@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2019 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,15 @@
  */
 package com.qwazr.scripts;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.server.RemoteService;
+import com.qwazr.utils.concurrent.ExecutorUtils;
+import org.graalvm.polyglot.Value;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -27,9 +32,16 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertThat;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({ ScriptsTest.LibraryTest.class,
@@ -49,7 +61,7 @@ public class ScriptsTest {
 		}
 
 		@Override
-		public void test250runSync() throws IOException, ClassNotFoundException {
+		public void test250runSync() {
 			final RunThreadAbstract runThread = client.runSync(TaskNoVarScript.class.getName(), null);
 			Assert.assertNotNull(runThread);
 			Assert.assertNotNull(runThread.getStatus());
@@ -58,11 +70,12 @@ public class ScriptsTest {
 		}
 
 		@Override
-		public void test250runAsync() throws IOException, ClassNotFoundException, InterruptedException {
+		public void test250runAsync() throws InterruptedException {
 			final ScriptRunStatus status =
 					waitFor(client.runAsync(TaskNoVarScript.class.getName(), null).uuid, Objects::nonNull);
 			Assert.assertNotNull(status);
 		}
+
 	}
 
 	public static class LibraryTest extends LocalTest {
@@ -78,8 +91,8 @@ public class ScriptsTest {
 		}
 
 		@AfterClass
-		public static void cleanup() {
-			executor.shutdown();
+		public static void cleanup() throws InterruptedException {
+			ExecutorUtils.close(executor, 5, TimeUnit.MINUTES);
 			ScriptsServer.shutdown();
 		}
 
@@ -89,7 +102,37 @@ public class ScriptsTest {
 			Assert.assertNotNull(client);
 			return client;
 		}
-		
+
+		@Test
+		public void jsonStringifyTest() {
+			getClient().runSync(Paths.get("js/javacall.js").toString(), Map.of("javacall", new JavaCall()));
+		}
+
+		public class JavaCall {
+
+			public void call(Value value) throws IOException {
+				final Json json = getClient().jsonStringify(value, Json.class);
+				assertThat(json.callKey, equalTo("callValue"));
+				assertThat(json.list, equalTo(Arrays.asList(1, 2, 3, 4, 5)));
+				assertThat(json.map, equalTo(Map.of("key1", "value1", "key2", "value2")));
+			}
+		}
+
+		public static class Json {
+
+			public final String callKey;
+			public final List<Integer> list;
+			public final Map<String, String> map;
+
+			@JsonCreator
+			Json(@JsonProperty("callKey") final String callValue, @JsonProperty("list") final List<Integer> list,
+					@JsonProperty("map") final Map<String, String> map) {
+				this.callKey = callValue;
+				this.list = list;
+				this.map = map;
+			}
+
+		}
 	}
 
 	public static class SingleClientTest extends AbstractScriptsTest {
