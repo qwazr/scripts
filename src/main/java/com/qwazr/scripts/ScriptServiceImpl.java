@@ -19,10 +19,8 @@ import com.qwazr.server.AbstractServiceImpl;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LoggerUtils;
-import org.graalvm.polyglot.Value;
 
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -102,11 +100,6 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 	@Override
 	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects) {
 		return scriptManager.runAsync(scriptPath, objects);
-	}
-
-	@Override
-	public <T> T jsonStringify(final Value value, final Class<T> valueClass) throws IOException {
-		return scriptManager.jsonStringify(value, valueClass);
 	}
 
 }

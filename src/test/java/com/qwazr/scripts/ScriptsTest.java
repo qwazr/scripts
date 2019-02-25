@@ -108,10 +108,10 @@ public class ScriptsTest {
 			getClient().runSync(Paths.get("js/javacall.js").toString(), Map.of("javacall", new JavaCall()));
 		}
 
-		public class JavaCall {
+		public static class JavaCall {
 
 			public void call(Value value) throws IOException {
-				final Json json = getClient().jsonStringify(value, Json.class);
+				final Json json = ScriptUtils.fromJson(value, Json.class);
 				assertThat(json.callKey, equalTo("callValue"));
 				assertThat(json.list, equalTo(Arrays.asList(1, 2, 3, 4, 5)));
 				assertThat(json.map, equalTo(Map.of("key1", "value1", "key2", "value2")));

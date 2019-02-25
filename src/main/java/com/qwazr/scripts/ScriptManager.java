@@ -19,15 +19,12 @@ import com.qwazr.cluster.ClusterManager;
 import com.qwazr.library.LibraryServiceInterface;
 import com.qwazr.server.ServerException;
 import com.qwazr.utils.LoggerUtils;
-import com.qwazr.utils.ObjectMappers;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.concurrent.ReadWriteLock;
-import org.graalvm.polyglot.Value;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -128,52 +125,6 @@ public class ScriptManager {
 		executorService.execute(scriptRunThread);
 		expireScriptRunThread();
 		return scriptRunThread.getStatus();
-	}
-
-	<T> T jsonStringify(final Value value, final Class<T> valueClass) throws IOException {
-		if (value == null)
-			return null;
-		final Object object = buildJson(value);
-		return ObjectMappers.JSON.readValue(ObjectMappers.JSON.writeValueAsString(object), valueClass);
-	}
-
-	private static Object buildJson(final Value value) {
-		if (value.isBoolean())
-			return value.asBoolean();
-		if (value.isNull())
-			return null;
-		if (value.isNumber()) {
-			if (value.fitsInByte())
-				return value.asByte();
-			if (value.fitsInShort())
-				return value.asShort();
-			if (value.fitsInInt())
-				return value.asInt();
-			if (value.fitsInFloat())
-				return value.asFloat();
-			if (value.fitsInLong())
-				return value.asLong();
-			if (value.fitsInDouble())
-				return value.asDouble();
-			return value.asDouble();
-		}
-		if (value.isString())
-			return value.asString();
-		if (value.hasArrayElements()) {
-			final List<Object> list = new ArrayList<>();
-			for (final String key : value.getMemberKeys()) {
-				list.add(buildJson(value.getMember(key)));
-			}
-			return list;
-		}
-		if (value.hasMembers()) {
-			final Map<String, Object> map = new LinkedHashMap<>();
-			for (final String key : value.getMemberKeys()) {
-				map.put(key, buildJson(value.getMember(key)));
-			}
-			return map;
-		}
-		return null;
 	}
 
 	private void addScriptRunThread(final RunThreadAbstract scriptRunThread) {

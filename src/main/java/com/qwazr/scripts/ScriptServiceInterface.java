@@ -18,7 +18,6 @@ package com.qwazr.scripts;
 import com.qwazr.server.ServerException;
 import com.qwazr.server.ServiceInterface;
 import org.apache.commons.lang3.NotImplementedException;
-import org.graalvm.polyglot.Value;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
@@ -29,7 +28,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -80,8 +78,5 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	default ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects) throws ServerException {
 		throw new NotImplementedException("runSync");
 	}
-
-	default <T> T jsonStringify(final Value value, final Class<T> valueClass) throws IOException {
-		throw new NotImplementedException("jsonStringify");
-	}
+	
 }
