@@ -106,7 +106,7 @@ public class ScriptRunStatus<T> {
 				result);
 	}
 
-	private ScriptRunStatus(ScriptRunStatus src, Long startTime) {
+	private ScriptRunStatus(ScriptRunStatus<?> src, Long startTime) {
 		this.node = src.node;
 		this.name = src.name;
 		this.uuid = src.uuid;
@@ -121,11 +121,11 @@ public class ScriptRunStatus<T> {
 		this.result = null;
 	}
 
-	public static List<ScriptRunStatus> cloneSchedulerResultList(List<ScriptRunStatus> sources, Long startTime) {
+	public static List<ScriptRunStatus<?>> cloneSchedulerResultList(List<ScriptRunStatus<?>> sources, Long startTime) {
 		if (sources == null)
 			return null;
-		final List<ScriptRunStatus> list = new ArrayList<ScriptRunStatus>(sources.size());
-		sources.forEach(scriptRunStatus -> list.add(new ScriptRunStatus(scriptRunStatus, startTime)));
+		final List<ScriptRunStatus<?>> list = new ArrayList<>(sources.size());
+		sources.forEach(scriptRunStatus -> list.add(new ScriptRunStatus<>(scriptRunStatus, startTime)));
 		return list;
 	}
 
@@ -135,7 +135,7 @@ public class ScriptRunStatus<T> {
 			return false;
 		if (other == this)
 			return true;
-		final ScriptRunStatus<T> o = (ScriptRunStatus<T>) other;
+		final ScriptRunStatus<?> o = (ScriptRunStatus<?>) other;
 		return Objects.equals(node, o.node) && Objects.equals(name, o.name) && Objects.equals(uuid, o.uuid) &&
 				Objects.equals(startTime, o.startTime) && Objects.equals(error, o.error) &&
 				Objects.equals(statusPath, o.statusPath) && Objects.equals(stdOutPath, o.stdOutPath) &&

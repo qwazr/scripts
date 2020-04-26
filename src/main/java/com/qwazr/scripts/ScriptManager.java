@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ public class ScriptManager {
 	private static final Logger LOGGER = LoggerUtils.getLogger(ScriptManager.class);
 
 	private final ReadWriteLock runsMapLock = ReadWriteLock.stamped();
-	private final HashMap<String, RunThreadAbstract> runsMap;
+	private final HashMap<String, RunThreadAbstract<?>> runsMap;
 
 	private final ExecutorService executorService;
 	private final ScriptEngine scriptEngine;
@@ -100,8 +100,8 @@ public class ScriptManager {
 		return scriptFilePath;
 	}
 
-	private RunThreadAbstract getNewScriptRunThread(final String scriptPath, final Map<String, ?> objects) {
-		final RunThreadAbstract scriptRunThread;
+	private RunThreadAbstract<?> getNewScriptRunThread(final String scriptPath, final Map<String, ?> objects) {
+		final RunThreadAbstract<?> scriptRunThread;
 		if (scriptPath.endsWith(".js"))
 			scriptRunThread =
 					new JsRunThread(myAddress, scriptEngine, libraryService, getScriptFilePath(scriptPath), objects);
@@ -111,23 +111,23 @@ public class ScriptManager {
 		return scriptRunThread;
 	}
 
-	RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects) {
+	RunThreadAbstract<?> runSync(String scriptPath, Map<String, ?> objects) {
 		LOGGER.info(() -> "Run sync: " + scriptPath);
-		final RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
+		final RunThreadAbstract<?> scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		scriptRunThread.run();
 		expireScriptRunThread();
 		return scriptRunThread;
 	}
 
-	ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects) {
+	ScriptRunStatus<?> runAsync(final String scriptPath, final Map<String, ?> objects) {
 		LOGGER.info(() -> "Run async: " + scriptPath);
-		final RunThreadAbstract scriptRunThread = getNewScriptRunThread(scriptPath, objects);
+		final RunThreadAbstract<?> scriptRunThread = getNewScriptRunThread(scriptPath, objects);
 		executorService.execute(scriptRunThread);
 		expireScriptRunThread();
 		return scriptRunThread.getStatus();
 	}
 
-	private void addScriptRunThread(final RunThreadAbstract scriptRunThread) {
+	private void addScriptRunThread(final RunThreadAbstract<?> scriptRunThread) {
 		if (scriptRunThread == null)
 			return;
 		runsMapLock.write(() -> runsMap.put(scriptRunThread.getUUID(), scriptRunThread));
@@ -146,15 +146,15 @@ public class ScriptManager {
 		});
 	}
 
-	Map<String, ScriptRunStatus> getRunsStatus() {
+	Map<String, ScriptRunStatus<?>> getRunsStatus() {
 		return runsMapLock.read(() -> {
-			final LinkedHashMap<String, ScriptRunStatus> runStatusMap = new LinkedHashMap<>();
+			final LinkedHashMap<String, ScriptRunStatus<?>> runStatusMap = new LinkedHashMap<>();
 			runsMap.forEach((key, runThreadAbstract) -> runStatusMap.put(key, runThreadAbstract.getStatus()));
 			return runStatusMap;
 		});
 	}
 
-	RunThreadAbstract getRunThread(final String uuid) {
+	RunThreadAbstract<?> getRunThread(final String uuid) {
 		return runsMapLock.read(() -> runsMap.get(uuid));
 	}
 

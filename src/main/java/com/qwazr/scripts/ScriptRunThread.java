@@ -23,7 +23,7 @@ public interface ScriptRunThread<T> {
 
 	String getUUID();
 
-	ScriptRunStatus getStatus();
+	ScriptRunStatus<T> getStatus();
 
 	boolean hasExpired(long currentTime);
 

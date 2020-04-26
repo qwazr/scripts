@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,8 +85,7 @@ public class ScriptsServer implements BaseServer {
 		return INSTANCE;
 	}
 
-	public static synchronized void main(final String... args)
-			throws IOException, ReflectiveOperationException, ServletException, JMException {
+	public static synchronized void main(final String... args) throws IOException, ServletException, JMException {
 		if (INSTANCE != null)
 			shutdown();
 		INSTANCE = new ScriptsServer(new ServerConfiguration(args));

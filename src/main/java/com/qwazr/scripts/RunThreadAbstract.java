@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public abstract class RunThreadAbstract<T> implements ScriptRunThread, Runnable, Closeable {
+public abstract class RunThreadAbstract<T> implements ScriptRunThread<T>, Runnable, Closeable {
 
 	private static final Logger logger = LoggerUtils.getLogger(RunThreadAbstract.class);
 
@@ -88,7 +88,7 @@ public abstract class RunThreadAbstract<T> implements ScriptRunThread, Runnable,
 	}
 
 	@Override
-	final public Object getResult() {
+	final public T getResult() {
 		return result;
 	}
 

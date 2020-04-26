@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,9 +40,8 @@ public class ScriptSingleClient extends JsonClient implements ScriptServiceInter
 		statusTarget = scriptsTarget.path("status");
 	}
 
-	private final static GenericType<List<ScriptRunStatus>> listRunStatusType =
-			new GenericType<List<ScriptRunStatus>>() {
-			};
+	private final static GenericType<List<ScriptRunStatus<?>>> listRunStatusType = new GenericType<>() {
+	};
 
 	private WebTarget getRunTarget(final String scriptPath, final String group, final TargetRuleEnum rule) {
 		WebTarget target = runTarget.path(scriptPath);
@@ -54,12 +53,12 @@ public class ScriptSingleClient extends JsonClient implements ScriptServiceInter
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
+	public List<ScriptRunStatus<?>> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
 		return getRunTarget(scriptPath, group, rule).request(MediaType.APPLICATION_JSON).get(listRunStatusType);
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group,
+	public List<ScriptRunStatus<?>> runScriptVariables(final String scriptPath, final String group,
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 		if (variables == null || variables.isEmpty())
 			return runScript(scriptPath, group, rule);
@@ -68,16 +67,15 @@ public class ScriptSingleClient extends JsonClient implements ScriptServiceInter
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(final String runId) {
+	public ScriptRunStatus<?> getRunStatus(final String runId) {
 		return statusTarget.path(runId).request(MediaType.APPLICATION_JSON).get(ScriptRunStatus.class);
 	}
 
-	private final static GenericType<TreeMap<String, ScriptRunStatus>> mapRunStatusType =
-			new GenericType<TreeMap<String, ScriptRunStatus>>() {
-			};
+	private final static GenericType<TreeMap<String, ScriptRunStatus<?>>> mapRunStatusType = new GenericType<>() {
+	};
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus() {
+	public Map<String, ScriptRunStatus<?>> getRunsStatus() {
 		return statusTarget.request(MediaType.APPLICATION_JSON).get(mapRunStatusType);
 	}
 

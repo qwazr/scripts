@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package com.qwazr.scripts;
 import com.qwazr.utils.LoggerUtils;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.logging.Level;
@@ -28,7 +27,7 @@ public class ScriptConsole implements Closeable {
 
 	private static final Logger LOGGER = LoggerUtils.getLogger(ConsoleLogger.class);
 
-	private PrintWriter stdError;
+	private final PrintWriter stdError;
 
 	public ScriptConsole(final Writer errorWriter) {
 		this.stdError = errorWriter == null ?
@@ -44,7 +43,7 @@ public class ScriptConsole implements Closeable {
 		return ConsoleLogger.INSTANCE;
 	}
 
-	public void error(final Object object) throws IOException {
+	public void error(final Object object) {
 		if (object != null)
 			if (stdError != null)
 				stdError.println(object.toString());

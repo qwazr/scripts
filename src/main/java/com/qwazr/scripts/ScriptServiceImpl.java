@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,12 +39,12 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
+	public List<ScriptRunStatus<?>> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
 		return runScriptVariables(scriptPath, group, rule, null);
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group,
+	public List<ScriptRunStatus<?>> runScriptVariables(final String scriptPath, final String group,
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 		try {
 			return Collections.singletonList(scriptManager.runAsync(scriptPath, variables));
@@ -53,15 +53,15 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 		}
 	}
 
-	private RunThreadAbstract getRunThread(final String runId) throws ServerException {
-		final RunThreadAbstract runThread = scriptManager.getRunThread(runId);
+	private RunThreadAbstract<?> getRunThread(final String runId) throws ServerException {
+		final RunThreadAbstract<?> runThread = scriptManager.getRunThread(runId);
 		if (runThread == null)
 			throw new ServerException(Status.NOT_FOUND, "Running script not found: " + runId);
 		return runThread;
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(final String runId) {
+	public ScriptRunStatus<?> getRunStatus(final String runId) {
 		try {
 			return getRunThread(runId).getStatus();
 		} catch (ServerException e) {
@@ -88,17 +88,17 @@ class ScriptServiceImpl extends AbstractServiceImpl implements ScriptServiceInte
 	}
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus() {
+	public Map<String, ScriptRunStatus<?>> getRunsStatus() {
 		return scriptManager.getRunsStatus();
 	}
 
 	@Override
-	public RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects) {
+	public RunThreadAbstract<?> runSync(String scriptPath, Map<String, ?> objects) {
 		return scriptManager.runSync(scriptPath, objects);
 	}
 
 	@Override
-	public ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects) {
+	public ScriptRunStatus<?> runAsync(final String scriptPath, final Map<String, ?> objects) {
 		return scriptManager.runAsync(scriptPath, objects);
 	}
 

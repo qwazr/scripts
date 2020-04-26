@@ -29,7 +29,7 @@ class JavaRunThread extends RunThreadAbstract<Object> {
 
 	private final Map<String, Object> variables;
 	private final Class<?> scriptClass;
-	private final Constructor constructor;
+	private final Constructor<?> constructor;
 	private final LibraryServiceInterface libraryService;
 
 	JavaRunThread(final String myAddress, final LibraryServiceInterface libraryService, final String className,

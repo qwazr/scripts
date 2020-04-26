@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public abstract class AbstractScriptsTest {
@@ -58,14 +58,14 @@ public abstract class AbstractScriptsTest {
 
 	@Test
 	public void test100list() {
-		Map<String, ScriptRunStatus> statusMap = client.getRunsStatus();
+		Map<String, ScriptRunStatus<?>> statusMap = client.getRunsStatus();
 		Assert.assertNotNull(statusMap);
 	}
 
-	ScriptRunStatus waitFor(final String uuid, final Function<ScriptRunStatus, Boolean> function)
+	ScriptRunStatus<?> waitFor(final String uuid, final Function<ScriptRunStatus<?>, Boolean> function)
 			throws InterruptedException {
 		for (int i = 0; i < 10; i++) {
-			final ScriptRunStatus status = client.getRunStatus(uuid);
+			final ScriptRunStatus<?> status = client.getRunStatus(uuid);
 			if (function.apply(status))
 				return status;
 			Thread.sleep(1000);
@@ -74,31 +74,29 @@ public abstract class AbstractScriptsTest {
 		return null;
 	}
 
-	private Map<String, ScriptRunStatus> waitFor(final List<ScriptRunStatus> list,
-			final Function<ScriptRunStatus, Boolean> function) throws InterruptedException {
+	private Map<String, ScriptRunStatus<?>> waitFor(final List<ScriptRunStatus<?>> list,
+			final Function<ScriptRunStatus<?>, Boolean> function) throws InterruptedException {
 		Assert.assertNotNull(list);
 		Assert.assertFalse(list.isEmpty());
-		final Map<String, ScriptRunStatus> results = new HashMap<>();
-		for (final ScriptRunStatus status : list)
+		final Map<String, ScriptRunStatus<?>> results = new HashMap<>();
+		for (final ScriptRunStatus<?> status : list)
 			results.put(status.uuid, waitFor(status.uuid, function));
 		return results;
 	}
 
 	private void startClassVariables(TargetRuleEnum targetRule, Map<String, String> variables)
 			throws InterruptedException {
-		final List<ScriptRunStatus> list =
+		final List<ScriptRunStatus<?>> list =
 				client.runScriptVariables(TaskVariablesScript.class.getName(), null, targetRule, variables);
-		final Map<String, ScriptRunStatus> statusMap = waitFor(list,
+		final Map<String, ScriptRunStatus<?>> statusMap = waitFor(list,
 				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		Assert.assertTrue(TaskVariablesScript.EXECUTION_COUNT.get() > 0);
 		Assert.assertNotNull(statusMap);
-		statusMap.forEach((key, status) -> {
-			Assert.assertEquals(true, status.result);
-		});
+		statusMap.forEach((key, status) -> Assert.assertEquals(true, status.result));
 	}
 
 	private void startClass(TargetRuleEnum targetRule) throws InterruptedException {
-		final List<ScriptRunStatus> list = client.runScript(TaskNoVarScript.class.getName(), null, targetRule);
+		final List<ScriptRunStatus<?>> list = client.runScript(TaskNoVarScript.class.getName(), null, targetRule);
 		waitFor(list, status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.terminated);
 		Assert.assertTrue(TaskNoVarScript.EXECUTION_COUNT.get() > 0);
 	}
@@ -121,7 +119,7 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test250runSync() throws IOException, ClassNotFoundException {
+	public void test250runSync() {
 		try {
 			client.runSync(TaskNoVarScript.class.getName(), null);
 			Assert.fail("NotImplementedException not thrown");
@@ -131,7 +129,7 @@ public abstract class AbstractScriptsTest {
 	}
 
 	@Test
-	public void test250runAsync() throws IOException, ClassNotFoundException, InterruptedException {
+	public void test250runAsync() throws InterruptedException {
 		try {
 			waitFor(client.runAsync(TaskNoVarScript.class.getName(), null).getUuid(), status -> true);
 			Assert.fail("NotImplementedException not thrown");
@@ -143,8 +141,8 @@ public abstract class AbstractScriptsTest {
 	@Test
 	public void test200startJs() throws InterruptedException, IOException {
 		final Map<String, String> variables = Map.of("ScriptTestJS", "ScriptTestJS");
-		final List<ScriptRunStatus> list = client.runScriptVariables("js/test.js", null, null, variables);
-		ScriptRunStatus finalStatus = waitFor(list.get(0).getUuid(),
+		final List<ScriptRunStatus<?>> list = client.runScriptVariables("js/test.js", null, null, variables);
+		ScriptRunStatus<?> finalStatus = waitFor(list.get(0).getUuid(),
 				status -> status.getEndTime() != null && status.getState() == ScriptRunStatus.ScriptState.terminated);
 		final String scriptOut = IOUtils.toString(client.getRunOut(finalStatus.getUuid()), StandardCharsets.UTF_8);
 		assertThat("Hello World! ScriptTestJS\nLOG", equalTo(scriptOut.trim()));
@@ -174,8 +172,8 @@ public abstract class AbstractScriptsTest {
 
 	@Test
 	public void test400startJSError() throws InterruptedException {
-		final List<ScriptRunStatus> list = client.runScriptVariables("js/error.js", null, null, null);
-		final ScriptRunStatus finalStatus = waitFor(list.get(0).uuid,
+		final List<ScriptRunStatus<?>> list = client.runScriptVariables("js/error.js", null, null, null);
+		final ScriptRunStatus<?> finalStatus = waitFor(list.get(0).uuid,
 				status -> status.endTime != null && status.state == ScriptRunStatus.ScriptState.error);
 		Assert.assertEquals("org.graalvm.polyglot.PolyglotException: ReferenceError: erroneous is not defined",
 				finalStatus.error);

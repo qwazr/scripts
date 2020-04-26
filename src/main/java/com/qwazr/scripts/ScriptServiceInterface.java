@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,25 +41,25 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/run/{script_path : .+}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	List<ScriptRunStatus> runScript(@PathParam("script_path") String scriptPath, @QueryParam("group") String group,
+	List<ScriptRunStatus<?>> runScript(@PathParam("script_path") String scriptPath, @QueryParam("group") String group,
 			@QueryParam("rule") TargetRuleEnum rule);
 
 	@POST
 	@Path("/run/{script_path : .+}")
 	@Consumes(ServiceInterface.APPLICATION_JSON_UTF8)
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	List<ScriptRunStatus> runScriptVariables(@PathParam("script_path") String scriptPath,
+	List<ScriptRunStatus<?>> runScriptVariables(@PathParam("script_path") String scriptPath,
 			@QueryParam("group") String group, @QueryParam("rule") TargetRuleEnum rule, Map<String, String> variables);
 
 	@GET
 	@Path("/status")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Map<String, ScriptRunStatus> getRunsStatus();
+	Map<String, ScriptRunStatus<?>> getRunsStatus();
 
 	@GET
 	@Path("/status/{run_id}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	ScriptRunStatus getRunStatus(@PathParam("run_id") String run_id);
+	ScriptRunStatus<?> getRunStatus(@PathParam("run_id") String run_id);
 
 	@GET
 	@Path("/status/{run_id}/out")
@@ -71,12 +71,12 @@ public interface ScriptServiceInterface extends ServiceInterface {
 	@Produces(MediaType.TEXT_PLAIN)
 	InputStream getRunErr(@PathParam("run_id") String run_id);
 
-	default RunThreadAbstract runSync(String scriptPath, Map<String, ?> objects) throws ServerException {
+	default RunThreadAbstract<?> runSync(String scriptPath, Map<String, ?> objects) throws ServerException {
 		throw new NotImplementedException("runSync");
 	}
 
-	default ScriptRunStatus runAsync(final String scriptPath, final Map<String, ?> objects) throws ServerException {
+	default ScriptRunStatus<?> runAsync(final String scriptPath, final Map<String, ?> objects) throws ServerException {
 		throw new NotImplementedException("runSync");
 	}
-	
+
 }

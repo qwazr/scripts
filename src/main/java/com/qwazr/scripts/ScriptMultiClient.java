@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Emmanuel Keller / QWAZR
+ * Copyright 2015-2020 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,8 +49,9 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 		return clients;
 	}
 
-	private FunctionEx<ScriptSingleClient, List<ScriptRunStatus>, Exception> getRunScriptAction(final String scriptPath,
-			final String group, final TargetRuleEnum rule, final Map<String, String> variables) {
+	private FunctionEx<ScriptSingleClient, List<ScriptRunStatus<?>>, Exception> getRunScriptAction(
+			final String scriptPath, final String group, final TargetRuleEnum rule,
+			final Map<String, String> variables) {
 		if (variables == null)
 			return c -> c.runScript(scriptPath, group, rule);
 		else
@@ -58,22 +59,22 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 
 	}
 
-	private List<ScriptRunStatus> runScriptRuleAll(final String scriptPath, final String group,
+	private List<ScriptRunStatus<?>> runScriptRuleAll(final String scriptPath, final String group,
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 
-		final List<List<ScriptRunStatus>> statusList =
+		final List<List<ScriptRunStatus<?>>> statusList =
 				forEachParallel(getRunScriptAction(scriptPath, group, rule, variables), LOGGER);
 
-		final List<ScriptRunStatus> results = new ArrayList<>();
+		final List<ScriptRunStatus<?>> results = new ArrayList<>();
 		statusList.forEach(results::addAll);
 		return results;
 	}
 
-	private List<ScriptRunStatus> runScriptRuleOne(final String scriptPath, final String group,
+	private List<ScriptRunStatus<?>> runScriptRuleOne(final String scriptPath, final String group,
 			final TargetRuleEnum rule, final Map<String, String> variables) {
 
 		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
-		final List<ScriptRunStatus> result =
+		final List<ScriptRunStatus<?>> result =
 				firstRandomSuccess(getRunScriptAction(scriptPath, group, rule, variables), exceptions::add);
 		if (result != null)
 			return result;
@@ -83,12 +84,12 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
+	public List<ScriptRunStatus<?>> runScript(final String scriptPath, final String group, final TargetRuleEnum rule) {
 		return runScriptVariables(scriptPath, group, rule, null);
 	}
 
 	@Override
-	public List<ScriptRunStatus> runScriptVariables(final String scriptPath, final String group, TargetRuleEnum rule,
+	public List<ScriptRunStatus<?>> runScriptVariables(final String scriptPath, final String group, TargetRuleEnum rule,
 			Map<String, String> variables) {
 		if (rule == null)
 			rule = TargetRuleEnum.one;
@@ -102,10 +103,10 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 	}
 
 	@Override
-	public Map<String, ScriptRunStatus> getRunsStatus() {
-		final Map<String, ScriptRunStatus> finalResult = new TreeMap<>();
+	public Map<String, ScriptRunStatus<?>> getRunsStatus() {
+		final Map<String, ScriptRunStatus<?>> finalResult = new TreeMap<>();
 		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
-		final List<Map<String, ScriptRunStatus>> results =
+		final List<Map<String, ScriptRunStatus<?>>> results =
 				forEachParallel(ScriptSingleClient::getRunsStatus, exceptions::add);
 		results.forEach(finalResult::putAll);
 		return finalResult;
@@ -133,7 +134,7 @@ public class ScriptMultiClient extends MultiClient<ScriptSingleClient> implement
 	}
 
 	@Override
-	public ScriptRunStatus getRunStatus(final String runId) {
+	public ScriptRunStatus<?> getRunStatus(final String runId) {
 		final MultiWebApplicationException.Builder exceptions = MultiWebApplicationException.of(LOGGER);
 		return checkEmptyResult(runId, firstRandomSuccess(client -> client.getRunStatus(runId), exceptions::add),
 				exceptions);
