@@ -23,7 +23,7 @@
     </scm>
 
     <properties>
-        <graalvm.version>19.3.1</graalvm.version>
+        <graalvm.version>20.1.0</graalvm.version>
     </properties>
 
     <dependencies>
